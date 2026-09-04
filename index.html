@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Inventario - PVC</title>
+  <title>Control de Inventario - PVC con Fotos</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -60,7 +60,6 @@
       background: #f8fafc; 
     }
     
-    /* Botones de acción grandes y claros */
     .botones-accion {
       display: flex;
       gap: 10px;
@@ -123,11 +122,20 @@
     .alerta-error { background: #fee2e2; color: #991b1b; border: 3px solid #fca5a5; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-    th, td { border: 2px solid #cbd5e1; padding: 14px; text-align: left; font-size: 17px; }
+    th, td { border: 2px solid #cbd5e1; padding: 12px; text-align: left; font-size: 17px; vertical-align: middle; }
     th { background: #0f172a; color: white; font-size: 18px; }
     
-    .badge-ok { color: #16a34a; font-weight: bold; font-size: 17px; }
-    .badge-no { color: #dc2626; font-weight: bold; font-size: 17px; }
+    .img-miniatura {
+      width: 55px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      background: #e2e8f0;
+    }
+
+    .badge-ok { color: #16a34a; font-weight: bold; font-size: 16px; }
+    .badge-no { color: #dc2626; font-weight: bold; font-size: 16px; }
     
     .total-box { 
       font-size: 20px; 
@@ -162,6 +170,9 @@
     <label for="observacion">3. Nota / Factura (Opcional):</label>
     <input type="text" id="observacion" placeholder="Ej. Factura #123">
 
+    <label for="imagenUrl">4. Enlace de la Foto (Opcional):</label>
+    <input type="text" id="imagenUrl" placeholder="Pega aquí el enlace de la imagen web">
+
     <!-- Botones grandes y directos -->
     <div class="botones-accion">
       <button class="btn-salida" onclick="registrarMovimiento('Salida')">🔴 VENTA / SALIDA</button>
@@ -179,10 +190,10 @@
       <table>
         <thead>
           <tr>
+            <th>Foto</th>
             <th>SKU</th>
             <th>Stock</th>
             <th>Estado</th>
-            <th>Nota</th>
           </tr>
         </thead>
         <tbody id="tablaInventario">
@@ -193,32 +204,12 @@
     <div class="total-box" id="totalGeneral">Total en bodega: 0</div>
   </div>
 
-  <div class="card">
-    <h2>Historial de Movimientos</h2>
-    <div style="overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Tipo</th>
-            <th>SKU</th>
-            <th>Cant.</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody id="tablaHistorial">
-          <tr><td colspan="5" class="loading">Cargando historial...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
 </div>
 
 <!-- Importar Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBZatVDM_4fZ-7V3ujpWMGu3FIM-XqkQL4",
@@ -234,22 +225,22 @@
   const db = getFirestore(app);
 
   const datosOriginales = [
-    { codigo: "A: 251", cantidad: 122, observaciones: "" },
-    { codigo: "EG: 304", cantidad: 54, observaciones: "" },
-    { codigo: "302", cantidad: 6, observaciones: "" },
-    { codigo: "054", cantidad: 54, observaciones: "" },
-    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado" },
-    { codigo: "A2502", cantidad: 18, observaciones: "" },
-    { codigo: "252", cantidad: 103, observaciones: "" },
-    { codigo: "B 2524", cantidad: 87, observaciones: "" },
-    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado" },
-    { codigo: "A0018", cantidad: 94, observaciones: "Revisado" },
-    { codigo: "A250", cantidad: 44, observaciones: "Revisado" },
-    { codigo: "2531", cantidad: 103, observaciones: "" },
-    { codigo: "2598", cantidad: 161, observaciones: "Revisado" },
-    { codigo: "2522", cantidad: 0, observaciones: "NO HAY" },
-    { codigo: "52", cantidad: 50, observaciones: "" },
-    { codigo: "39", cantidad: 100, observaciones: "" }
+    { codigo: "A: 251", cantidad: 122, observaciones: "", imagen: "" },
+    { codigo: "EG: 304", cantidad: 54, observaciones: "", imagen: "" },
+    { codigo: "302", cantidad: 6, observaciones: "", imagen: "" },
+    { codigo: "054", cantidad: 54, observaciones: "", imagen: "" },
+    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado", imagen: "" },
+    { codigo: "A2502", cantidad: 18, observaciones: "", imagen: "" },
+    { codigo: "252", cantidad: 103, observaciones: "", imagen: "" },
+    { codigo: "B 2524", cantidad: 87, observaciones: "", imagen: "" },
+    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado", imagen: "" },
+    { codigo: "A0018", cantidad: 94, observaciones: "Revisado", imagen: "" },
+    { codigo: "A250", cantidad: 44, observaciones: "Revisado", imagen: "" },
+    { codigo: "2531", cantidad: 103, observaciones: "", imagen: "" },
+    { codigo: "2598", cantidad: 161, observaciones: "Revisado", imagen: "" },
+    { codigo: "2522", cantidad: 0, observaciones: "NO HAY", imagen: "" },
+    { codigo: "52", cantidad: 50, observaciones: "", imagen: "" },
+    { codigo: "39", cantidad: 100, observaciones: "", imagen: "" }
   ];
 
   function mostrarAlerta(texto, esError = false) {
@@ -260,7 +251,7 @@
     setTimeout(() => { alerta.style.display = 'none'; }, 4000);
   }
 
-  // 1. Escuchar Stock
+  // Escuchar Stock en tiempo real
   const qInventario = collection(db, "laminas_pvc");
   onSnapshot(qInventario, (snapshot) => {
     const tabla = document.getElementById('tablaInventario');
@@ -286,45 +277,21 @@
       totalAcumulado += stockNum;
       let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
+      // Mostrar imagen por defecto si no tiene enlace
+      let imgTag = item.imagen ? `<img src="${item.imagen}" class="img-miniatura" alt="Foto">` : `<div class="img-miniatura" style="display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;">Sin foto</div>`;
+
       tabla.innerHTML += `
         <tr>
+          <td style="text-align: center;">${imgTag}</td>
           <td><b>${item.codigo}</b></td>
-          <td style="font-size: 20px; font-weight: bold;">${stockNum}</td>
+          <td style="font-size: 20px; font-weight: bold;">${stockNum}<br><span style="font-size:12px; color:#64748b; font-weight:normal;">${item.observaciones || ''}</span></td>
           <td>${estadoHTML}</td>
-          <td>${item.observaciones || '-'}</td>
         </tr>
       `;
       select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
     });
 
     document.getElementById('totalGeneral').innerText = `Total en bodega: ${totalAcumulado} láminas`;
-  });
-
-  // 2. Escuchar Historial
-  const qHistorial = query(collection(db, "historial_movimientos"), orderBy("timestamp", "desc"), limit(10));
-  onSnapshot(qHistorial, (snapshot) => {
-    const tablaHistorial = document.getElementById('tablaHistorial');
-    tablaHistorial.innerHTML = '';
-
-    if (snapshot.empty) {
-      tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align:center;">Sin movimientos recientes.</td></tr>`;
-      return;
-    }
-
-    snapshot.forEach((docSnap) => {
-      let h = docSnap.data();
-      let colorTipo = h.tipo === 'Entrada' ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
-      
-      tablaHistorial.innerHTML += `
-        <tr>
-          <td style="font-size: 14px; color: #334155;">${h.fechaHora}</td>
-          <td style="${colorTipo}">${h.tipo}</td>
-          <td><b>${h.codigo}</b></td>
-          <td style="font-weight: bold;">${h.cantidad}</td>
-          <td>${h.observacion || '-'}</td>
-        </tr>
-      `;
-    });
   });
 
   window.completarSKU = function() {
@@ -349,6 +316,7 @@
     let codigo = document.getElementById('codigoManual').value.trim();
     let cantidad = parseInt(document.getElementById('cantidad').value);
     let obs = document.getElementById('observacion').value.trim();
+    let imgUrl = document.getElementById('imagenUrl').value.trim();
 
     if (!codigo) {
       mostrarAlerta('Selecciona o escribe un código SKU.', true);
@@ -364,6 +332,7 @@
     let docSnap = await getDoc(docRef);
 
     let stockActual = docSnap.exists() ? Number(docSnap.data().cantidad) || 0 : 0;
+    let imagenActual = docSnap.exists() ? (docSnap.data().imagen || "") : "";
     let nuevoStock = stockActual;
 
     if (tipo === 'Entrada') {
@@ -377,21 +346,21 @@
     }
 
     let obsFinal = obs || (tipo === 'Entrada' ? 'Compra' : 'Venta');
+    let imagenFinal = imgUrl || imagenActual; // Si pega una nueva foto la actualiza, si no, mantiene la anterior
 
-    await setDoc(docRef, { codigo: codigo, cantidad: nuevoStock, observaciones: obsFinal }, { merge: true });
-
-    const ahora = new Date();
-    const fechaHora = ahora.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + ahora.toLocaleDateString() + ')';
-
-    await addDoc(collection(db, "historial_movimientos"), {
-      codigo: codigo, tipo: tipo, cantidad: cantidad, observacion: obsFinal, fechaHora: fechaHora, timestamp: Date.now()
-    });
+    await setDoc(docRef, { 
+      codigo: codigo, 
+      cantidad: nuevoStock, 
+      observaciones: obsFinal,
+      imagen: imagenFinal
+    }, { merge: true });
 
     mostrarAlerta(`¡Registrado con éxito!`);
     document.getElementById('codigoManual').value = '';
     document.getElementById('codigoSelect').value = '';
     document.getElementById('cantidad').value = '';
     document.getElementById('observacion').value = '';
+    document.getElementById('imagenUrl').value = '';
   }
 </script>
 
