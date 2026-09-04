@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventario - Láminas de Tumbado PVC</title>
+  <title>Inventario en Tiempo Real - Láminas PVC</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f6f8; color: #333; }
     .container { max-width: 700px; margin: auto; }
@@ -13,14 +13,15 @@
     input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
     button { background: #0f172a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
     button:hover { background: #334155; }
-    .btn-reset { background: #dc2626; margin-top: 5px; font-size: 13px; padding: 6px; }
-    .btn-reset:hover { background: #b91c1c; }
+    .btn-init { background: #16a34a; margin-top: 5px; font-size: 13px; padding: 6px; }
+    .btn-init:hover { background: #15803d; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
     th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 14px; }
     th { background: #1e293b; color: white; }
     .badge-ok { color: #16a34a; font-weight: bold; }
     .badge-no { color: #dc2626; font-weight: bold; }
     .total-box { font-size: 16px; font-weight: bold; margin-top: 10px; text-align: right; }
+    .loading { text-align: center; font-style: italic; color: #666; }
   </style>
 </head>
 <body>
@@ -28,7 +29,7 @@
 <div class="container">
   
   <div class="card">
-    <h2>Control de Inventario - PVC</h2>
+    <h2>Control de Inventario - PVC (En Vivo)</h2>
     
     <label for="codigoSelect">Seleccionar o Escribir SKU:</label>
     <select id="codigoSelect" onchange="completarSKU()">
@@ -49,11 +50,11 @@
     <input type="text" id="observacion" placeholder="Ej. Venta factura #123">
 
     <button onclick="registrarMovimiento()">Registrar Movimiento</button>
-    <button class="btn-reset" onclick="restaurarInventarioOriginal()">Restaurar Stock Original (Si algo falla)</button>
+    <button class="btn-init" onclick="cargarInventarioInicial()">Subir Inventario Inicial (Solo 1 vez)</button>
   </div>
 
   <div class="card">
-    <h2>Stock Actual en Bodega</h2>
+    <h2>Stock Actual Sincronizado</h2>
     <div style="overflow-x: auto;">
       <table>
         <thead>
@@ -65,7 +66,7 @@
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <!-- Se llena automáticamente -->
+          <tr><td colspan="4" class="loading">Conectando con la base de datos en tiempo real...</td></tr>
         </tbody>
       </table>
     </div>
@@ -74,8 +75,26 @@
 
 </div>
 
-<script>
-  // Datos originales exactos de tu registro físico
+<!-- Importar Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // Credenciales de tu proyecto de Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZatVDM_4fZ-7V3ujpWMGu3FIM-XqkQL4",
+    authDomain: "inventariopvc-9865e.firebaseapp.com",
+    projectId: "inventariopvc-9865e",
+    storageBucket: "inventariopvc-9865e.appspot.com",
+    messagingSenderId: "418733149343",
+    appId: "1:418733149343:web:7cc8630f6d3895cb28a6aa",
+    measurementId: "G-HSXVQ2L7L"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Datos originales extraídos de tu registro físico
   const datosOriginales = [
     { codigo: "A: 251", cantidad: 122, observaciones: "" },
     { codigo: "EG: 304", cantidad: 54, observaciones: "" },
@@ -95,14 +114,9 @@
     { codigo: "39", cantidad: 100, observaciones: "" }
   ];
 
-  // Cargar desde localStorage o usar los originales si el stock total es 0
-  let inventario = JSON.parse(localStorage.getItem('pvc_inventario_activo'));
-  if (!inventario || inventario.reduce((acc, item) => acc + item.cantidad, 0) === 0) {
-    inventario = datosOriginales;
-    localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
-  }
-
-  function renderizarTabla() {
+  // Escuchar cambios en tiempo real en Firestore
+  const q = collection(db, "laminas_pvc");
+  onSnapshot(q, (snapshot) => {
     const tabla = document.getElementById('tablaInventario');
     const select = document.getElementById('codigoSelect');
     
@@ -110,8 +124,21 @@
     select.innerHTML = '<option value="">-- Elige una lámina del inventario --</option>';
     
     let totalAcumulado = 0;
+    let items = [];
 
-    inventario.forEach((item) => {
+    snapshot.forEach((docSnap) => {
+      items.push(docSnap.data());
+    });
+
+    items.sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+    if (items.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay datos en la nube. Haz clic en "Subir Inventario Inicial" abajo.</td></tr>`;
+      document.getElementById('totalGeneral').innerText = `Total general en bodega: 0 láminas`;
+      return;
+    }
+
+    items.forEach((item) => {
       let stockNum = Number(item.cantidad) || 0;
       totalAcumulado += stockNum;
       
@@ -130,17 +157,30 @@
     });
 
     document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
-    localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
-  }
+  });
 
-  function completarSKU() {
+  window.completarSKU = function() {
     const seleccionado = document.getElementById('codigoSelect').value;
     if (seleccionado) {
       document.getElementById('codigoManual').value = seleccionado;
     }
   }
 
-  function registrarMovimiento() {
+  window.cargarInventarioInicial = async function() {
+    if(!confirm("¿Deseas subir los datos iniciales de las láminas a Firebase?")) return;
+    try {
+      for (let item of datosOriginales) {
+        let docId = item.codigo.replace(/[^a-zA-Z0-9]/g, '_');
+        let docRef = doc(db, "laminas_pvc", docId);
+        await setDoc(docRef, item);
+      }
+      alert("¡Inventario inicial subido con éxito a la nube!");
+    } catch (e) {
+      alert("Error al subir datos: " + e.message);
+    }
+  }
+
+  window.registrarMovimiento = async function() {
     let codigo = document.getElementById('codigoManual').value.trim();
     let tipo = document.getElementById('tipoMovimiento').value;
     let cantidad = parseInt(document.getElementById('cantidad').value);
@@ -155,49 +195,41 @@
       return;
     }
 
-    let producto = inventario.find(item => item.codigo.toLowerCase() === codigo.toLowerCase());
+    let docId = codigo.replace(/[^a-zA-Z0-9]/g, '_');
+    let docRef = doc(db, "laminas_pvc", docId);
+    let docSnap = await getDoc(docRef);
 
-    if (tipo === 'Entrada') {
-      if (producto) {
-        producto.cantidad += cantidad;
-        if(obs) producto.observaciones = obs;
-      } else {
-        inventario.push({ codigo: codigo, cantidad: cantidad, observaciones: obs || 'Nuevo ingreso' });
-      }
-    } else if (tipo === 'Salida') {
-      if (producto) {
-        if (producto.cantidad < cantidad) {
-          alert(`Stock insuficiente. Solo quedan ${producto.cantidad} unidades.`);
-          return;
-        }
-        producto.cantidad -= cantidad;
-        if(obs) producto.observaciones = obs;
-      } else {
-        alert('Este código no existe en el inventario actual para registrar una salida.');
-        return;
-      }
+    let stockActual = 0;
+    if (docSnap.exists()) {
+      stockActual = Number(docSnap.data().cantidad) || 0;
     }
 
-    alert('¡Movimiento registrado con éxito!');
+    let nuevoStock = stockActual;
+    if (tipo === 'Entrada') {
+      nuevoStock += cantidad;
+    } else if (tipo === 'Salida') {
+      if (stockActual < cantidad) {
+        alert(`Stock insuficiente. Solo quedan ${stockActual} unidades.`);
+        return;
+      }
+      nuevoStock -= cantidad;
+    }
+
+    let observacionFinal = obs || (tipo === 'Entrada' ? 'Nueva entrada' : 'Salida de bodega');
+
+    await setDoc(docRef, {
+      codigo: codigo,
+      cantidad: nuevoStock,
+      observaciones: observacionFinal
+    }, { merge: true });
+
+    alert('¡Movimiento registrado y sincronizado en tiempo real!');
     
     document.getElementById('codigoManual').value = '';
     document.getElementById('codigoSelect').value = '';
     document.getElementById('cantidad').value = '';
     document.getElementById('observacion').value = '';
-
-    renderizarTabla();
   }
-
-  function restaurarInventarioOriginal() {
-    if(confirm('¿Deseas restablecer los valores originales de la hoja física?')) {
-      inventario = JSON.parse(JSON.stringify(datosOriginales));
-      localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
-      renderizarTabla();
-      alert('¡Inventario restaurado con éxito!');
-    }
-  }
-
-  renderizarTabla();
 </script>
 
 </body>
