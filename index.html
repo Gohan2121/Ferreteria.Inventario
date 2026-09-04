@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Inventario - PVC con Fotos</title>
+  <title>Control de Inventario - PVC</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -60,6 +60,7 @@
       background: #f8fafc; 
     }
     
+    /* Botones de acción */
     .botones-accion {
       display: flex;
       gap: 10px;
@@ -71,7 +72,7 @@
       color: white; 
       border: none; 
       font-weight: bold; 
-      font-size: 19px; 
+      font-size: 18px; 
       padding: 18px 10px; 
       flex: 1; 
       border-radius: 10px; 
@@ -86,7 +87,7 @@
       color: white; 
       border: none; 
       font-weight: bold; 
-      font-size: 19px; 
+      font-size: 18px; 
       padding: 18px 10px; 
       flex: 1; 
       border-radius: 10px; 
@@ -95,6 +96,21 @@
       box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
     }
     .btn-entrada:active { transform: scale(0.98); }
+
+    .btn-nuevo {
+      background: #2563eb;
+      color: white;
+      border: none;
+      font-weight: bold;
+      font-size: 18px;
+      padding: 16px;
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    }
+    .btn-nuevo:hover { background: #1d4ed8; }
     
     .btn-init { 
       background: #475569; 
@@ -157,7 +173,7 @@
   <div class="card">
     <h2>CONTROL DE BODEGA PVC</h2>
     
-    <label for="codigoSelect">1. Elige la Lámina:</label>
+    <label for="codigoSelect">1. Elige la Lámina existente:</label>
     <select id="codigoSelect" onchange="completarSKU()">
       <option value="">-- Toca aquí para seleccionar --</option>
     </select>
@@ -173,7 +189,10 @@
     <label for="imagenUrl">4. Enlace de la Foto (Opcional):</label>
     <input type="text" id="imagenUrl" placeholder="Pega aquí el enlace de la imagen web">
 
-    <!-- Botones grandes y directos -->
+    <!-- Botón para añadir producto nuevo -->
+    <button class="btn-nuevo" onclick="agregarNuevoProducto()">➕ AÑADIR NUEVO PRODUCTO</button>
+
+    <!-- Botones de Venta y Compra -->
     <div class="botones-accion">
       <button class="btn-salida" onclick="registrarMovimiento('Salida')">🔴 VENTA / SALIDA</button>
       <button class="btn-entrada" onclick="registrarMovimiento('Entrada')">🟢 COMPRA / ENTRADA</button>
@@ -277,7 +296,6 @@
       totalAcumulado += stockNum;
       let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
-      // Mostrar imagen por defecto si no tiene enlace
       let imgTag = item.imagen ? `<img src="${item.imagen}" class="img-miniatura" alt="Foto">` : `<div class="img-miniatura" style="display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;">Sin foto</div>`;
 
       tabla.innerHTML += `
@@ -310,6 +328,46 @@
     } catch (e) {
       mostrarAlerta("Error: " + e.message, true);
     }
+  }
+
+  // Función para añadir un producto nuevo
+  window.agregarNuevoProducto = async function() {
+    let codigo = document.getElementById('codigoManual').value.trim();
+    let cantidad = parseInt(document.getElementById('cantidad').value);
+    let obs = document.getElementById('observacion').value.trim();
+    let imgUrl = document.getElementById('imagenUrl').value.trim();
+
+    if (!codigo) {
+      mostrarAlerta('Escribe el código SKU del nuevo producto.', true);
+      return;
+    }
+    if (isNaN(cantidad) || cantidad < 0) {
+      mostrarAlerta('Ingresa una cantidad inicial válida.', true);
+      return;
+    }
+
+    let docId = codigo.replace(/[^a-zA-Z0-9]/g, '_');
+    let docRef = doc(db, "laminas_pvc", docId);
+    let docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      mostrarAlerta(`El código "${codigo}" ya existe. Usa los botones de Venta o Compra.`, true);
+      return;
+    }
+
+    await setDoc(docRef, { 
+      codigo: codigo, 
+      cantidad: cantidad, 
+      observaciones: obs || 'Nuevo producto',
+      imagen: imgUrl 
+    });
+
+    mostrarAlerta(`¡Nuevo producto "${codigo}" añadido con éxito!`);
+    document.getElementById('codigoManual').value = '';
+    document.getElementById('codigoSelect').value = '';
+    document.getElementById('cantidad').value = '';
+    document.getElementById('observacion').value = '';
+    document.getElementById('imagenUrl').value = '';
   }
 
   window.registrarMovimiento = async function(tipo) {
@@ -346,7 +404,7 @@
     }
 
     let obsFinal = obs || (tipo === 'Entrada' ? 'Compra' : 'Venta');
-    let imagenFinal = imgUrl || imagenActual; // Si pega una nueva foto la actualiza, si no, mantiene la anterior
+    let imagenFinal = imgUrl || imagenActual;
 
     await setDoc(docRef, { 
       codigo: codigo, 
