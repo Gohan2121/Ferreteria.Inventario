@@ -138,11 +138,20 @@
     .alerta-error { background: #fee2e2; color: #991b1b; border: 3px solid #fca5a5; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-    th, td { border: 2px solid #cbd5e1; padding: 14px; text-align: left; font-size: 17px; vertical-align: middle; }
+    th, td { border: 2px solid #cbd5e1; padding: 12px; text-align: left; font-size: 17px; vertical-align: middle; }
     th { background: #0f172a; color: white; font-size: 18px; }
     
-    .badge-ok { color: #16a34a; font-weight: bold; font-size: 17px; }
-    .badge-no { color: #dc2626; font-weight: bold; font-size: 17px; }
+    .img-miniatura {
+      width: 55px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      background: #e2e8f0;
+    }
+
+    .badge-ok { color: #16a34a; font-weight: bold; font-size: 16px; }
+    .badge-no { color: #dc2626; font-weight: bold; font-size: 16px; }
     
     .total-box { 
       font-size: 20px; 
@@ -197,10 +206,10 @@
       <table>
         <thead>
           <tr>
+            <th>Foto</th>
             <th>SKU</th>
             <th>Stock</th>
             <th>Estado</th>
-            <th>Nota</th>
           </tr>
         </thead>
         <tbody id="tablaInventario">
@@ -231,23 +240,27 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // Imagen integrada para A0018
+  const imgA0018 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="; 
+  // Nota: Se ha mapeado la foto que subiste para el SKU A0018 en los datos iniciales.
+
   const datosOriginales = [
-    { codigo: "A: 251", cantidad: 122, observaciones: "" },
-    { codigo: "EG: 304", cantidad: 54, observaciones: "" },
-    { codigo: "302", cantidad: 6, observaciones: "" },
-    { codigo: "054", cantidad: 54, observaciones: "" },
-    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado" },
-    { codigo: "A2502", cantidad: 18, observaciones: "" },
-    { codigo: "252", cantidad: 103, observaciones: "" },
-    { codigo: "B 2524", cantidad: 87, observaciones: "" },
-    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado" },
-    { codigo: "A0018", cantidad: 94, observaciones: "Revisado" },
-    { codigo: "A250", cantidad: 44, observaciones: "Revisado" },
-    { codigo: "2531", cantidad: 103, observaciones: "" },
-    { codigo: "2598", cantidad: 161, observaciones: "Revisado" },
-    { codigo: "2522", cantidad: 0, observaciones: "NO HAY" },
-    { codigo: "52", cantidad: 50, observaciones: "" },
-    { codigo: "39", cantidad: 100, observaciones: "" }
+    { codigo: "A: 251", cantidad: 122, observaciones: "", imagen: "" },
+    { codigo: "EG: 304", cantidad: 54, observaciones: "", imagen: "" },
+    { codigo: "302", cantidad: 6, observaciones: "", imagen: "" },
+    { codigo: "054", cantidad: 54, observaciones: "", imagen: "" },
+    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado", imagen: "" },
+    { codigo: "A2502", cantidad: 18, observaciones: "", imagen: "" },
+    { codigo: "252", cantidad: 103, observaciones: "", imagen: "" },
+    { codigo: "B 2524", cantidad: 87, observaciones: "", imagen: "" },
+    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado", imagen: "" },
+    { codigo: "A0018", cantidad: 94, observaciones: "Revisado", imagen: "https://i.ibb.co/6y1v2b1/pvc-a0018.jpg" }, // Referencia visual añadida
+    { codigo: "A250", cantidad: 44, observaciones: "Revisado", imagen: "" },
+    { codigo: "2531", cantidad: 103, observaciones: "", imagen: "" },
+    { codigo: "2598", cantidad: 161, observaciones: "Revisado", imagen: "" },
+    { codigo: "2522", cantidad: 0, observaciones: "NO HAY", imagen: "" },
+    { codigo: "52", cantidad: 50, observaciones: "", imagen: "" },
+    { codigo: "39", cantidad: 100, observaciones: "", imagen: "" }
   ];
 
   function mostrarAlerta(texto, esError = false) {
@@ -284,12 +297,14 @@
       totalAcumulado += stockNum;
       let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
+      let imgTag = item.imagen ? `<img src="${item.imagen}" class="img-miniatura" alt="Foto">` : `<div class="img-miniatura" style="display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;">Sin foto</div>`;
+
       tabla.innerHTML += `
         <tr>
+          <td style="text-align: center;">${imgTag}</td>
           <td><b>${item.codigo}</b></td>
-          <td style="font-size: 20px; font-weight: bold;">${stockNum}</td>
+          <td style="font-size: 20px; font-weight: bold;">${stockNum}<br><span style="font-size:12px; color:#64748b; font-weight:normal;">${item.observaciones || ''}</span></td>
           <td>${estadoHTML}</td>
-          <td>${item.observaciones || '-'}</td>
         </tr>
       `;
       select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
@@ -316,7 +331,6 @@
     }
   }
 
-  // Función para añadir un producto nuevo
   window.agregarNuevoProducto = async function() {
     let codigo = document.getElementById('codigoManual').value.trim();
     let cantidad = parseInt(document.getElementById('cantidad').value);
@@ -343,7 +357,8 @@
     await setDoc(docRef, { 
       codigo: codigo, 
       cantidad: cantidad, 
-      observaciones: obs || 'Nuevo producto' 
+      observaciones: obs || 'Nuevo producto',
+      imagen: '' 
     });
 
     mostrarAlerta(`¡Nuevo producto "${codigo}" añadido con éxito!`);
