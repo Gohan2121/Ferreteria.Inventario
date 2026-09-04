@@ -3,25 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventario en Tiempo Real - Láminas PVC</title>
+  <title>Control de Inventario - PVC en Vivo</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f6f8; color: #333; }
-    .container { max-width: 700px; margin: auto; }
-    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    h2 { margin-top: 0; color: #1e293b; font-size: 22px; }
-    label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px; }
-    input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-    button { background: #0f172a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
-    button:hover { background: #334155; }
-    .btn-init { background: #16a34a; margin-top: 5px; font-size: 13px; padding: 6px; }
-    .btn-init:hover { background: #15803d; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-    th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 14px; }
-    th { background: #1e293b; color: white; }
-    .badge-ok { color: #16a34a; font-weight: bold; }
-    .badge-no { color: #dc2626; font-weight: bold; }
-    .total-box { font-size: 16px; font-weight: bold; margin-top: 10px; text-align: right; }
-    .loading { text-align: center; font-style: italic; color: #666; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0; 
+      padding: 12px; 
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); 
+      color: #0f172a; 
+      min-height: 100vh;
+    }
+    .container { max-width: 650px; margin: auto; }
+    
+    .card { 
+      background: #ffffff; 
+      padding: 22px; 
+      border-radius: 16px; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+      margin-bottom: 20px; 
+      border-top: 5px solid #6366f1;
+    }
+    
+    h2 { 
+      margin-top: 0; 
+      color: #312e81; 
+      font-size: 24px; 
+      text-align: center; 
+      border-bottom: 2px solid #e0e7ff; 
+      padding-bottom: 12px; 
+      font-weight: 800;
+    }
+    
+    label { 
+      display: block; 
+      margin-top: 16px; 
+      font-weight: 700; 
+      font-size: 16px; 
+      color: #4338ca; 
+    }
+    
+    select, input { 
+      width: 100%; 
+      padding: 14px; 
+      margin-top: 6px; 
+      box-sizing: border-box; 
+      border: 2px solid #c7d2fe; 
+      border-radius: 10px; 
+      font-size: 18px; 
+      background: #f8fafc; 
+      color: #1e293b;
+      transition: all 0.3s ease;
+    }
+    
+    select:focus, input:focus { 
+      border-color: #6366f1; 
+      outline: none; 
+      background: white; 
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+    
+    .btn-main { 
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
+      color: white; 
+      border: none; 
+      font-weight: 800; 
+      font-size: 19px; 
+      padding: 18px; 
+      width: 100%; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      margin-top: 22px; 
+      box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    .btn-main:active { transform: scale(0.98); }
+    .btn-main:hover { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%); }
+    
+    .btn-init { 
+      background: #059669; 
+      font-size: 14px; 
+      padding: 12px; 
+      margin-top: 14px; 
+      border-radius: 10px; 
+      color: white; 
+      border: none; 
+      width: 100%; 
+      cursor: pointer; 
+      font-weight: 700; 
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+    }
+    .btn-init:hover { background: #047857; }
+
+    #mensajeAlerta { 
+      display: none; 
+      padding: 14px; 
+      margin-top: 15px; 
+      border-radius: 10px; 
+      font-weight: bold; 
+      text-align: center; 
+      font-size: 17px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .alerta-exito { background: #ecfdf5; color: #047857; border: 2px solid #34d399; }
+    .alerta-error { background: #fef2f2; color: #b91c1c; border: 2px solid #f87171; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
+    th, td { border: 1px solid #e2e8f0; padding: 14px; text-align: left; font-size: 15px; }
+    th { background: #312e81; color: white; font-size: 16px; font-weight: 700; }
+    
+    .badge-ok { color: #059669; font-weight: 800; background: #ecfdf5; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    .badge-no { color: #dc2626; font-weight: 800; background: #fef2f2; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    
+    .total-box { 
+      font-size: 18px; 
+      font-weight: 800; 
+      margin-top: 18px; 
+      text-align: right; 
+      color: #312e81; 
+      background: #e0e7ff; 
+      padding: 14px; 
+      border-radius: 10px; 
+      border-left: 6px solid #4f46e5;
+    }
+    .loading { text-align: center; font-style: italic; color: #64748b; padding: 25px; font-size: 17px; }
   </style>
 </head>
 <body>
@@ -29,48 +133,72 @@
 <div class="container">
   
   <div class="card">
-    <h2>Control de Inventario - PVC (En Vivo)</h2>
+    <h2>Control de Bodega - PVC</h2>
     
-    <label for="codigoSelect">Seleccionar o Escribir SKU:</label>
+    <label for="codigoSelect">1. Seleccionar Lámina (SKU):</label>
     <select id="codigoSelect" onchange="completarSKU()">
-      <option value="">-- Elige una lámina del inventario --</option>
-    </select>
-    <input type="text" id="codigoManual" placeholder="O escribe un código nuevo..." style="margin-top: 8px;">
-
-    <label for="tipoMovimiento">Tipo de Movimiento:</label>
-    <select id="tipoMovimiento">
-      <option value="Entrada">Entrada (Nueva Compra / Stock)</option>
-      <option value="Salida">Salida (Venta / Despacho)</option>
+      <option value="">-- Toca aquí para elegir una lámina --</option>
     </select>
     
-    <label for="cantidad">Cantidad:</label>
-    <input type="number" id="cantidad" placeholder="Ej. 10">
+    <input type="text" id="codigoManual" placeholder="O escribe el código aquí..." style="margin-top: 10px;">
 
-    <label for="observacion">Observaciones / Notas:</label>
-    <input type="text" id="observacion" placeholder="Ej. Venta factura #123">
+    <label for="tipoMovimiento">2. ¿Qué deseas hacer?:</label>
+    <select id="tipoMovimiento">
+      <option value="Salida">🔴 Despacho / Venta (Resta stock)</option>
+      <option value="Entrada">🟢 Nueva Compra / Ingreso (Suma stock)</option>
+    </select>
+    
+    <label for="cantidad">3. Cantidad:</label>
+    <input type="number" id="cantidad" placeholder="Ej. 5">
 
-    <button onclick="registrarMovimiento()">Registrar Movimiento</button>
-    <button class="btn-init" onclick="cargarInventarioInicial()">Subir Inventario Inicial (Solo 1 vez)</button>
+    <label for="observacion">4. Notas o Factura (Opcional):</label>
+    <input type="text" id="observacion" placeholder="Ej. Factura #123 o Cliente Juan">
+
+    <button class="btn-main" onclick="registrarMovimiento()">Registrar Operación</button>
+    
+    <div id="mensajeAlerta"></div>
+
+    <button class="btn-init" onclick="cargarInventarioInicial()">⚙️ Subir Inventario Inicial (Solo usar el primer día)</button>
   </div>
 
   <div class="card">
-    <h2>Stock Actual Sincronizado</h2>
+    <h2>Stock Actual en Tiempo Real</h2>
     <div style="overflow-x: auto;">
       <table>
         <thead>
           <tr>
             <th>Código SKU</th>
-            <th>Stock Actual</th>
+            <th>Stock</th>
             <th>Estado</th>
-            <th>Observación</th>
+            <th>Nota / Obs</th>
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <tr><td colspan="4" class="loading">Conectando con la base de datos en tiempo real...</td></tr>
+          <tr><td colspan="4" class="loading">Conectando con la base de datos...</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="total-box" id="totalGeneral">Total de láminas: 0</div>
+    <div class="total-box" id="totalGeneral">Total general en bodega: 0 láminas</div>
+  </div>
+
+  <div class="card">
+    <h2>Historial de Movimientos</h2>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha y Hora</th>
+            <th>Operación</th>
+            <th>SKU</th>
+            <th>Cant.</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="tablaHistorial">
+          <tr><td colspan="5" class="loading">Cargando historial...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
@@ -78,9 +206,8 @@
 <!-- Importar Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // Credenciales de tu proyecto de Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyBZatVDM_4fZ-7V3ujpWMGu3FIM-XqkQL4",
     authDomain: "inventariopvc-9865e.firebaseapp.com",
@@ -94,7 +221,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Datos originales extraídos de tu registro físico
   const datosOriginales = [
     { codigo: "A: 251", cantidad: 122, observaciones: "" },
     { codigo: "EG: 304", cantidad: 54, observaciones: "" },
@@ -114,14 +240,24 @@
     { codigo: "39", cantidad: 100, observaciones: "" }
   ];
 
-  // Escuchar cambios en tiempo real en Firestore
-  const q = collection(db, "laminas_pvc");
-  onSnapshot(q, (snapshot) => {
+  function mostrarAlerta(texto, esError = false) {
+    const alerta = document.getElementById('mensajeAlerta');
+    alerta.innerText = texto;
+    alerta.className = esError ? 'alerta-error' : 'alerta-exito';
+    alerta.style.display = 'block';
+    setTimeout(() => {
+      alerta.style.display = 'none';
+    }, 4000);
+  }
+
+  // 1. Escuchar Stock Actual en Tiempo Real
+  const qInventario = collection(db, "laminas_pvc");
+  onSnapshot(qInventario, (snapshot) => {
     const tabla = document.getElementById('tablaInventario');
     const select = document.getElementById('codigoSelect');
     
     tabla.innerHTML = '';
-    select.innerHTML = '<option value="">-- Elige una lámina del inventario --</option>';
+    select.innerHTML = '<option value="">-- Toca aquí para elegir una lámina --</option>';
     
     let totalAcumulado = 0;
     let items = [];
@@ -133,7 +269,7 @@
     items.sort((a, b) => a.codigo.localeCompare(b.codigo));
 
     if (items.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay datos en la nube. Haz clic en "Subir Inventario Inicial" abajo.</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay datos. Toca el botón verde de abajo para iniciar.</td></tr>`;
       document.getElementById('totalGeneral').innerText = `Total general en bodega: 0 láminas`;
       return;
     }
@@ -142,21 +278,48 @@
       let stockNum = Number(item.cantidad) || 0;
       totalAcumulado += stockNum;
       
-      let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
+      let estadoHTML = stockNum > 0 ? '<span class="badge-ok">✓ Disponible</span>' : '<span class="badge-no">✕ Agotado</span>';
       
       tabla.innerHTML += `
         <tr>
           <td><b>${item.codigo}</b></td>
-          <td>${stockNum}</td>
+          <td style="font-size: 19px; font-weight: 800; color: #312e81;">${stockNum}</td>
           <td>${estadoHTML}</td>
           <td>${item.observaciones || '-'}</td>
         </tr>
       `;
 
-      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
+      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock actual: ${stockNum})</option>`;
     });
 
     document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
+  });
+
+  // 2. Escuchar Historial de Movimientos en Tiempo Real
+  const qHistorial = query(collection(db, "historial_movimientos"), orderBy("timestamp", "desc"), limit(15));
+  onSnapshot(qHistorial, (snapshot) => {
+    const tablaHistorial = document.getElementById('tablaHistorial');
+    tablaHistorial.innerHTML = '';
+
+    if (snapshot.empty) {
+      tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay movimientos recientes.</td></tr>`;
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+      let h = docSnap.data();
+      let colorTipo = h.tipo === 'Entrada' ? 'color: #059669; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
+      
+      tablaHistorial.innerHTML += `
+        <tr>
+          <td style="font-size: 13px; color: #475569;">${h.fechaHora}</td>
+          <td style="${colorTipo}">${h.tipo}</td>
+          <td><b>${h.codigo}</b></td>
+          <td style="font-weight: bold;">${h.cantidad}</td>
+          <td>${h.observacion || '-'}</td>
+        </tr>
+      `;
+    });
   });
 
   window.completarSKU = function() {
@@ -167,16 +330,16 @@
   }
 
   window.cargarInventarioInicial = async function() {
-    if(!confirm("¿Deseas subir los datos iniciales de las láminas a Firebase?")) return;
+    if(!confirm("¿Deseas subir los datos iniciales a la nube?")) return;
     try {
       for (let item of datosOriginales) {
         let docId = item.codigo.replace(/[^a-zA-Z0-9]/g, '_');
         let docRef = doc(db, "laminas_pvc", docId);
         await setDoc(docRef, item);
       }
-      alert("¡Inventario inicial subido con éxito a la nube!");
+      mostrarAlerta("¡Inventario inicial subido con éxito!");
     } catch (e) {
-      alert("Error al subir datos: " + e.message);
+      mostrarAlerta("Error al subir datos: " + e.message, true);
     }
   }
 
@@ -187,11 +350,11 @@
     let obs = document.getElementById('observacion').value.trim();
 
     if (!codigo) {
-      alert('Por favor selecciona o escribe un código SKU.');
+      mostrarAlerta('Por favor selecciona o escribe un código SKU.', true);
       return;
     }
     if (isNaN(cantidad) || cantidad <= 0) {
-      alert('Ingresa una cantidad válida mayor a 0.');
+      mostrarAlerta('Ingresa una cantidad válida mayor a 0.', true);
       return;
     }
 
@@ -209,7 +372,7 @@
       nuevoStock += cantidad;
     } else if (tipo === 'Salida') {
       if (stockActual < cantidad) {
-        alert(`Stock insuficiente. Solo quedan ${stockActual} unidades.`);
+        mostrarAlerta(`Stock insuficiente. Solo quedan ${stockActual} unidades disponibles.`, true);
         return;
       }
       nuevoStock -= cantidad;
@@ -217,13 +380,30 @@
 
     let observacionFinal = obs || (tipo === 'Entrada' ? 'Nueva entrada' : 'Salida de bodega');
 
+    // 1. Actualizar Stock actual en Firebase
     await setDoc(docRef, {
       codigo: codigo,
       cantidad: nuevoStock,
       observaciones: observacionFinal
     }, { merge: true });
 
-    alert('¡Movimiento registrado y sincronizado en tiempo real!');
+    // 2. Registrar en el Historial con Fecha y Hora exacta
+    const ahora = new Date();
+    const fechaHoraFormateada = ahora.toLocaleString('es-EC', { 
+      year: 'numeric', month: '2-digit', day: '2-digit', 
+      hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    });
+
+    await addDoc(collection(db, "historial_movimientos"), {
+      codigo: codigo,
+      tipo: tipo,
+      cantidad: cantidad,
+      observacion: observacionFinal,
+      fechaHora: fechaHoraFormateada,
+      timestamp: Date.now()
+    });
+
+    mostrarAlerta(`¡Éxito! Se registró la ${tipo.toLowerCase()} de ${cantidad} unidades.`);
     
     document.getElementById('codigoManual').value = '';
     document.getElementById('codigoSelect').value = '';
