@@ -3,129 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Inventario - PVC en Vivo</title>
+  <title>Control de Inventario - PVC</title>
   <style>
     body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      font-family: Arial, sans-serif; 
       margin: 0; 
-      padding: 12px; 
-      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); 
+      padding: 10px; 
+      background: #f1f5f9; 
       color: #0f172a; 
-      min-height: 100vh;
     }
-    .container { max-width: 650px; margin: auto; }
+    .container { max-width: 600px; margin: auto; }
     
     .card { 
       background: #ffffff; 
-      padding: 22px; 
-      border-radius: 16px; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
-      margin-bottom: 20px; 
-      border-top: 5px solid #6366f1;
+      padding: 20px; 
+      border-radius: 14px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+      margin-bottom: 18px; 
+      border: 2px solid #cbd5e1;
     }
     
     h2 { 
       margin-top: 0; 
-      color: #312e81; 
+      color: #0f172a; 
       font-size: 24px; 
       text-align: center; 
-      border-bottom: 2px solid #e0e7ff; 
-      padding-bottom: 12px; 
-      font-weight: 800;
+      border-bottom: 3px solid #e2e8f0; 
+      padding-bottom: 10px; 
+      font-weight: bold;
     }
     
     label { 
       display: block; 
-      margin-top: 16px; 
-      font-weight: 700; 
-      font-size: 16px; 
-      color: #4338ca; 
+      margin-top: 14px; 
+      font-weight: bold; 
+      font-size: 18px; 
+      color: #1e293b; 
     }
     
     select, input { 
       width: 100%; 
-      padding: 14px; 
+      padding: 16px; 
       margin-top: 6px; 
       box-sizing: border-box; 
-      border: 2px solid #c7d2fe; 
+      border: 3px solid #94a3b8; 
       border-radius: 10px; 
-      font-size: 18px; 
-      background: #f8fafc; 
-      color: #1e293b;
-      transition: all 0.3s ease;
+      font-size: 20px; 
+      background: #ffffff; 
+      color: #0f172a;
+      font-weight: bold;
     }
     
     select:focus, input:focus { 
-      border-color: #6366f1; 
+      border-color: #2563eb; 
       outline: none; 
-      background: white; 
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      background: #f8fafc; 
     }
     
-    .btn-main { 
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
+    /* Botones de acción grandes y claros */
+    .botones-accion {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-salida { 
+      background: #dc2626; 
       color: white; 
       border: none; 
-      font-weight: 800; 
+      font-weight: bold; 
       font-size: 19px; 
-      padding: 18px; 
-      width: 100%; 
-      border-radius: 12px; 
+      padding: 18px 10px; 
+      flex: 1; 
+      border-radius: 10px; 
       cursor: pointer; 
-      margin-top: 22px; 
-      box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
-      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
     }
-    .btn-main:active { transform: scale(0.98); }
-    .btn-main:hover { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%); }
+    .btn-salida:active { transform: scale(0.98); }
+
+    .btn-entrada { 
+      background: #16a34a; 
+      color: white; 
+      border: none; 
+      font-weight: bold; 
+      font-size: 19px; 
+      padding: 18px 10px; 
+      flex: 1; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
+    }
+    .btn-entrada:active { transform: scale(0.98); }
     
     .btn-init { 
-      background: #059669; 
-      font-size: 14px; 
+      background: #475569; 
+      font-size: 15px; 
       padding: 12px; 
-      margin-top: 14px; 
-      border-radius: 10px; 
+      margin-top: 15px; 
+      border-radius: 8px; 
       color: white; 
       border: none; 
       width: 100%; 
       cursor: pointer; 
-      font-weight: 700; 
-      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+      font-weight: bold; 
     }
-    .btn-init:hover { background: #047857; }
 
     #mensajeAlerta { 
       display: none; 
-      padding: 14px; 
+      padding: 16px; 
       margin-top: 15px; 
       border-radius: 10px; 
       font-weight: bold; 
       text-align: center; 
-      font-size: 17px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      font-size: 18px; 
     }
-    .alerta-exito { background: #ecfdf5; color: #047857; border: 2px solid #34d399; }
-    .alerta-error { background: #fef2f2; color: #b91c1c; border: 2px solid #f87171; }
+    .alerta-exito { background: #dcfce7; color: #166534; border: 3px solid #86efac; }
+    .alerta-error { background: #fee2e2; color: #991b1b; border: 3px solid #fca5a5; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
-    th, td { border: 1px solid #e2e8f0; padding: 14px; text-align: left; font-size: 15px; }
-    th { background: #312e81; color: white; font-size: 16px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+    th, td { border: 2px solid #cbd5e1; padding: 14px; text-align: left; font-size: 17px; }
+    th { background: #0f172a; color: white; font-size: 18px; }
     
-    .badge-ok { color: #059669; font-weight: 800; background: #ecfdf5; padding: 4px 8px; border-radius: 6px; display: inline-block; }
-    .badge-no { color: #dc2626; font-weight: 800; background: #fef2f2; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    .badge-ok { color: #16a34a; font-weight: bold; font-size: 17px; }
+    .badge-no { color: #dc2626; font-weight: bold; font-size: 17px; }
     
     .total-box { 
-      font-size: 18px; 
-      font-weight: 800; 
-      margin-top: 18px; 
+      font-size: 20px; 
+      font-weight: bold; 
+      margin-top: 15px; 
       text-align: right; 
-      color: #312e81; 
-      background: #e0e7ff; 
+      color: #0f172a; 
+      background: #e2e8f0; 
       padding: 14px; 
-      border-radius: 10px; 
-      border-left: 6px solid #4f46e5;
+      border-radius: 8px; 
     }
-    .loading { text-align: center; font-style: italic; color: #64748b; padding: 25px; font-size: 17px; }
+    .loading { text-align: center; font-style: italic; color: #475569; padding: 20px; font-size: 18px; }
   </style>
 </head>
 <body>
@@ -133,52 +147,50 @@
 <div class="container">
   
   <div class="card">
-    <h2>Control de Bodega - PVC</h2>
+    <h2>CONTROL DE BODEGA PVC</h2>
     
-    <label for="codigoSelect">1. Seleccionar Lámina (SKU):</label>
+    <label for="codigoSelect">1. Elige la Lámina:</label>
     <select id="codigoSelect" onchange="completarSKU()">
-      <option value="">-- Toca aquí para elegir una lámina --</option>
+      <option value="">-- Toca aquí para seleccionar --</option>
     </select>
     
     <input type="text" id="codigoManual" placeholder="O escribe el código aquí..." style="margin-top: 10px;">
 
-    <label for="tipoMovimiento">2. ¿Qué deseas hacer?:</label>
-    <select id="tipoMovimiento">
-      <option value="Salida">🔴 Despacho / Venta (Resta stock)</option>
-      <option value="Entrada">🟢 Nueva Compra / Ingreso (Suma stock)</option>
-    </select>
-    
-    <label for="cantidad">3. Cantidad:</label>
-    <input type="number" id="cantidad" placeholder="Ej. 5">
+    <label for="cantidad">2. Cantidad:</label>
+    <input type="number" id="cantidad" placeholder="Ej. 5" style="font-size: 22px;">
 
-    <label for="observacion">4. Notas o Factura (Opcional):</label>
-    <input type="text" id="observacion" placeholder="Ej. Factura #123 o Cliente Juan">
+    <label for="observacion">3. Nota / Factura (Opcional):</label>
+    <input type="text" id="observacion" placeholder="Ej. Factura #123">
 
-    <button class="btn-main" onclick="registrarMovimiento()">Registrar Operación</button>
+    <!-- Botones grandes y directos -->
+    <div class="botones-accion">
+      <button class="btn-salida" onclick="registrarMovimiento('Salida')">🔴 VENTA / SALIDA</button>
+      <button class="btn-entrada" onclick="registrarMovimiento('Entrada')">🟢 COMPRA / ENTRADA</button>
+    </div>
     
     <div id="mensajeAlerta"></div>
 
-    <button class="btn-init" onclick="cargarInventarioInicial()">⚙️ Subir Inventario Inicial (Solo usar el primer día)</button>
+    <button class="btn-init" onclick="cargarInventarioInicial()">⚙️ Cargar Stock Inicial (Solo primer día)</button>
   </div>
 
   <div class="card">
-    <h2>Stock Actual en Tiempo Real</h2>
+    <h2>Stock en Tiempo Real</h2>
     <div style="overflow-x: auto;">
       <table>
         <thead>
           <tr>
-            <th>Código SKU</th>
+            <th>SKU</th>
             <th>Stock</th>
             <th>Estado</th>
-            <th>Nota / Obs</th>
+            <th>Nota</th>
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <tr><td colspan="4" class="loading">Conectando con la base de datos...</td></tr>
+          <tr><td colspan="4" class="loading">Conectando...</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="total-box" id="totalGeneral">Total general en bodega: 0 láminas</div>
+    <div class="total-box" id="totalGeneral">Total en bodega: 0</div>
   </div>
 
   <div class="card">
@@ -187,8 +199,8 @@
       <table>
         <thead>
           <tr>
-            <th>Fecha y Hora</th>
-            <th>Operación</th>
+            <th>Hora</th>
+            <th>Tipo</th>
             <th>SKU</th>
             <th>Cant.</th>
             <th>Nota</th>
@@ -226,15 +238,15 @@
     { codigo: "EG: 304", cantidad: 54, observaciones: "" },
     { codigo: "302", cantidad: 6, observaciones: "" },
     { codigo: "054", cantidad: 54, observaciones: "" },
-    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado / Visto bueno" },
+    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado" },
     { codigo: "A2502", cantidad: 18, observaciones: "" },
     { codigo: "252", cantidad: 103, observaciones: "" },
     { codigo: "B 2524", cantidad: 87, observaciones: "" },
-    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado / Visto bueno" },
-    { codigo: "A0018", cantidad: 94, observaciones: "Revisado / Visto bueno" },
-    { codigo: "A250", cantidad: 44, observaciones: "Revisado / Visto bueno" },
+    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado" },
+    { codigo: "A0018", cantidad: 94, observaciones: "Revisado" },
+    { codigo: "A250", cantidad: 44, observaciones: "Revisado" },
     { codigo: "2531", cantidad: 103, observaciones: "" },
-    { codigo: "2598", cantidad: 161, observaciones: "Revisado / Visto bueno" },
+    { codigo: "2598", cantidad: 161, observaciones: "Revisado" },
     { codigo: "2522", cantidad: 0, observaciones: "NO HAY" },
     { codigo: "52", cantidad: 50, observaciones: "" },
     { codigo: "39", cantidad: 100, observaciones: "" }
@@ -245,74 +257,67 @@
     alerta.innerText = texto;
     alerta.className = esError ? 'alerta-error' : 'alerta-exito';
     alerta.style.display = 'block';
-    setTimeout(() => {
-      alerta.style.display = 'none';
-    }, 4000);
+    setTimeout(() => { alerta.style.display = 'none'; }, 4000);
   }
 
-  // 1. Escuchar Stock Actual en Tiempo Real
+  // 1. Escuchar Stock
   const qInventario = collection(db, "laminas_pvc");
   onSnapshot(qInventario, (snapshot) => {
     const tabla = document.getElementById('tablaInventario');
     const select = document.getElementById('codigoSelect');
     
     tabla.innerHTML = '';
-    select.innerHTML = '<option value="">-- Toca aquí para elegir una lámina --</option>';
+    select.innerHTML = '<option value="">-- Toca aquí para seleccionar --</option>';
     
     let totalAcumulado = 0;
     let items = [];
 
-    snapshot.forEach((docSnap) => {
-      items.push(docSnap.data());
-    });
-
+    snapshot.forEach((docSnap) => { items.push(docSnap.data()); });
     items.sort((a, b) => a.codigo.localeCompare(b.codigo));
 
     if (items.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay datos. Toca el botón verde de abajo para iniciar.</td></tr>`;
-      document.getElementById('totalGeneral').innerText = `Total general en bodega: 0 láminas`;
+      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay datos. Toca el botón gris de abajo.</td></tr>`;
+      document.getElementById('totalGeneral').innerText = `Total en bodega: 0`;
       return;
     }
 
     items.forEach((item) => {
       let stockNum = Number(item.cantidad) || 0;
       totalAcumulado += stockNum;
-      
-      let estadoHTML = stockNum > 0 ? '<span class="badge-ok">✓ Disponible</span>' : '<span class="badge-no">✕ Agotado</span>';
+      let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
       tabla.innerHTML += `
         <tr>
           <td><b>${item.codigo}</b></td>
-          <td style="font-size: 19px; font-weight: 800; color: #312e81;">${stockNum}</td>
+          <td style="font-size: 20px; font-weight: bold;">${stockNum}</td>
           <td>${estadoHTML}</td>
           <td>${item.observaciones || '-'}</td>
         </tr>
       `;
-
-      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock actual: ${stockNum})</option>`;
+      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
     });
 
-    document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
+    document.getElementById('totalGeneral').innerText = `Total en bodega: ${totalAcumulado} láminas`;
   });
 
-  // 2. Escuchar Historial de Movimientos en Tiempo Real
-  const qHistorial = query(collection(db, "historial_movimientos"), orderBy("timestamp", "desc"), limit(15));
+  // 2. Escuchar Historial
+  const qHistorial = query(collection(db, "historial_movimientos"), orderBy("timestamp", "desc"), limit(10));
   onSnapshot(qHistorial, (snapshot) => {
     const tablaHistorial = document.getElementById('tablaHistorial');
     tablaHistorial.innerHTML = '';
 
     if (snapshot.empty) {
-      tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay movimientos recientes.</td></tr>`;
+      tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align:center;">Sin movimientos recientes.</td></tr>`;
       return;
     }
 
     snapshot.forEach((docSnap) => {
       let h = docSnap.data();
-      let colorTipo = h.tipo === 'Entrada' ? 'color: #059669; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
+      let colorTipo = h.tipo === 'Entrada' ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
       
       tablaHistorial.innerHTML += `
         <tr>
-          <td style="font-size: 13px; color: #475569;">${h.fechaHora}</td>
+          <td style="font-size: 14px; color: #334155;">${h.fechaHora}</td>
           <td style="${colorTipo}">${h.tipo}</td>
           <td><b>${h.codigo}</b></td>
           <td style="font-weight: bold;">${h.cantidad}</td>
@@ -323,38 +328,34 @@
   });
 
   window.completarSKU = function() {
-    const seleccionado = document.getElementById('codigoSelect').value;
-    if (seleccionado) {
-      document.getElementById('codigoManual').value = seleccionado;
-    }
+    let sel = document.getElementById('codigoSelect').value;
+    if (sel) document.getElementById('codigoManual').value = sel;
   }
 
   window.cargarInventarioInicial = async function() {
-    if(!confirm("¿Deseas subir los datos iniciales a la nube?")) return;
+    if(!confirm("¿Cargar stock inicial en la nube?")) return;
     try {
       for (let item of datosOriginales) {
         let docId = item.codigo.replace(/[^a-zA-Z0-9]/g, '_');
-        let docRef = doc(db, "laminas_pvc", docId);
-        await setDoc(docRef, item);
+        await setDoc(doc(db, "laminas_pvc", docId), item);
       }
-      mostrarAlerta("¡Inventario inicial subido con éxito!");
+      mostrarAlerta("¡Stock inicial cargado con éxito!");
     } catch (e) {
-      mostrarAlerta("Error al subir datos: " + e.message, true);
+      mostrarAlerta("Error: " + e.message, true);
     }
   }
 
-  window.registrarMovimiento = async function() {
+  window.registrarMovimiento = async function(tipo) {
     let codigo = document.getElementById('codigoManual').value.trim();
-    let tipo = document.getElementById('tipoMovimiento').value;
     let cantidad = parseInt(document.getElementById('cantidad').value);
     let obs = document.getElementById('observacion').value.trim();
 
     if (!codigo) {
-      mostrarAlerta('Por favor selecciona o escribe un código SKU.', true);
+      mostrarAlerta('Selecciona o escribe un código SKU.', true);
       return;
     }
     if (isNaN(cantidad) || cantidad <= 0) {
-      mostrarAlerta('Ingresa una cantidad válida mayor a 0.', true);
+      mostrarAlerta('Ingresa una cantidad válida.', true);
       return;
     }
 
@@ -362,49 +363,31 @@
     let docRef = doc(db, "laminas_pvc", docId);
     let docSnap = await getDoc(docRef);
 
-    let stockActual = 0;
-    if (docSnap.exists()) {
-      stockActual = Number(docSnap.data().cantidad) || 0;
-    }
-
+    let stockActual = docSnap.exists() ? Number(docSnap.data().cantidad) || 0 : 0;
     let nuevoStock = stockActual;
+
     if (tipo === 'Entrada') {
       nuevoStock += cantidad;
-    } else if (tipo === 'Salida') {
+    } else {
       if (stockActual < cantidad) {
-        mostrarAlerta(`Stock insuficiente. Solo quedan ${stockActual} unidades disponibles.`, true);
+        mostrarAlerta(`Stock insuficiente. Solo quedan ${stockActual} unidades.`, true);
         return;
       }
       nuevoStock -= cantidad;
     }
 
-    let observacionFinal = obs || (tipo === 'Entrada' ? 'Nueva entrada' : 'Salida de bodega');
+    let obsFinal = obs || (tipo === 'Entrada' ? 'Compra' : 'Venta');
 
-    // 1. Actualizar Stock actual en Firebase
-    await setDoc(docRef, {
-      codigo: codigo,
-      cantidad: nuevoStock,
-      observaciones: observacionFinal
-    }, { merge: true });
+    await setDoc(docRef, { codigo: codigo, cantidad: nuevoStock, observaciones: obsFinal }, { merge: true });
 
-    // 2. Registrar en el Historial con Fecha y Hora exacta
     const ahora = new Date();
-    const fechaHoraFormateada = ahora.toLocaleString('es-EC', { 
-      year: 'numeric', month: '2-digit', day: '2-digit', 
-      hour: '2-digit', minute: '2-digit', second: '2-digit' 
-    });
+    const fechaHora = ahora.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + ahora.toLocaleDateString() + ')';
 
     await addDoc(collection(db, "historial_movimientos"), {
-      codigo: codigo,
-      tipo: tipo,
-      cantidad: cantidad,
-      observacion: observacionFinal,
-      fechaHora: fechaHoraFormateada,
-      timestamp: Date.now()
+      codigo: codigo, tipo: tipo, cantidad: cantidad, observacion: obsFinal, fechaHora: fechaHora, timestamp: Date.now()
     });
 
-    mostrarAlerta(`¡Éxito! Se registró la ${tipo.toLowerCase()} de ${cantidad} unidades.`);
-    
+    mostrarAlerta(`¡Registrado con éxito!`);
     document.getElementById('codigoManual').value = '';
     document.getElementById('codigoSelect').value = '';
     document.getElementById('cantidad').value = '';
