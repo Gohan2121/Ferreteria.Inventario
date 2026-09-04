@@ -13,13 +13,14 @@
     input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
     button { background: #0f172a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
     button:hover { background: #334155; }
+    .btn-reset { background: #dc2626; margin-top: 5px; font-size: 13px; padding: 6px; }
+    .btn-reset:hover { background: #b91c1c; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
     th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 14px; }
     th { background: #1e293b; color: white; }
     .badge-ok { color: #16a34a; font-weight: bold; }
     .badge-no { color: #dc2626; font-weight: bold; }
     .total-box { font-size: 16px; font-weight: bold; margin-top: 10px; text-align: right; }
-    .loading { text-align: center; font-style: italic; color: #666; }
   </style>
 </head>
 <body>
@@ -47,7 +48,8 @@
     <label for="observacion">Observaciones / Notas:</label>
     <input type="text" id="observacion" placeholder="Ej. Venta factura #123">
 
-    <button id="btnGuardar" onclick="registrarMovimiento()">Registrar Movimiento</button>
+    <button onclick="registrarMovimiento()">Registrar Movimiento</button>
+    <button class="btn-reset" onclick="restaurarInventarioOriginal()">Restaurar Stock Original (Si algo falla)</button>
   </div>
 
   <div class="card">
@@ -63,7 +65,7 @@
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <tr><td colspan="4" class="loading">Cargando inventario...</td></tr>
+          <!-- Se llena automáticamente -->
         </tbody>
       </table>
     </div>
@@ -73,8 +75,8 @@
 </div>
 
 <script>
-  // Inventario base respaldado para carga instantánea
-  let inventario = JSON.parse(localStorage.getItem('pvc_inventario')) || [
+  // Datos originales exactos de tu registro físico
+  const datosOriginales = [
     { codigo: "A: 251", cantidad: 122, observaciones: "" },
     { codigo: "EG: 304", cantidad: 54, observaciones: "" },
     { codigo: "302", cantidad: 6, observaciones: "" },
@@ -93,6 +95,13 @@
     { codigo: "39", cantidad: 100, observaciones: "" }
   ];
 
+  // Cargar desde localStorage o usar los originales si el stock total es 0
+  let inventario = JSON.parse(localStorage.getItem('pvc_inventario_activo'));
+  if (!inventario || inventario.reduce((acc, item) => acc + item.cantidad, 0) === 0) {
+    inventario = datosOriginales;
+    localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
+  }
+
   function renderizarTabla() {
     const tabla = document.getElementById('tablaInventario');
     const select = document.getElementById('codigoSelect');
@@ -104,26 +113,24 @@
 
     inventario.forEach((item) => {
       let stockNum = Number(item.cantidad) || 0;
-      let codigoVal = item.codigo || '';
-      let obsVal = item.observaciones || '-';
-      
       totalAcumulado += stockNum;
+      
       let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
       tabla.innerHTML += `
         <tr>
-          <td><b>${codigoVal}</b></td>
+          <td><b>${item.codigo}</b></td>
           <td>${stockNum}</td>
           <td>${estadoHTML}</td>
-          <td>${obsVal}</td>
+          <td>${item.observaciones || '-'}</td>
         </tr>
       `;
 
-      select.innerHTML += `<option value="${codigoVal}">${codigoVal} (Stock: ${stockNum})</option>`;
+      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
     });
 
     document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
-    localStorage.setItem('pvc_inventario', JSON.stringify(inventario));
+    localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
   }
 
   function completarSKU() {
@@ -181,7 +188,15 @@
     renderizarTabla();
   }
 
-  // Cargar inventario inmediatamente de forma local y fluida
+  function restaurarInventarioOriginal() {
+    if(confirm('¿Deseas restablecer los valores originales de la hoja física?')) {
+      inventario = JSON.parse(JSON.stringify(datosOriginales));
+      localStorage.setItem('pvc_inventario_activo', JSON.stringify(inventario));
+      renderizarTabla();
+      alert('¡Inventario restaurado con éxito!');
+    }
+  }
+
   renderizarTabla();
 </script>
 
