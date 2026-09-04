@@ -60,7 +60,6 @@
       background: #f8fafc; 
     }
     
-    /* Botones de acción */
     .botones-accion {
       display: flex;
       gap: 10px;
@@ -142,8 +141,8 @@
     th { background: #0f172a; color: white; font-size: 18px; }
     
     .img-miniatura {
-      width: 55px;
-      height: 55px;
+      width: 60px;
+      height: 60px;
       object-fit: cover;
       border-radius: 8px;
       border: 2px solid #cbd5e1;
@@ -186,10 +185,8 @@
     <label for="observacion">3. Nota / Factura (Opcional):</label>
     <input type="text" id="observacion" placeholder="Ej. Factura #123">
 
-    <!-- Botón para añadir producto nuevo -->
     <button class="btn-nuevo" onclick="agregarNuevoProducto()">➕ AÑADIR NUEVO PRODUCTO</button>
 
-    <!-- Botones de Venta y Compra -->
     <div class="botones-accion">
       <button class="btn-salida" onclick="registrarMovimiento('Salida')">🔴 VENTA / SALIDA</button>
       <button class="btn-entrada" onclick="registrarMovimiento('Entrada')">🟢 COMPRA / ENTRADA</button>
@@ -197,7 +194,7 @@
     
     <div id="mensajeAlerta"></div>
 
-    <button class="btn-init" onclick="cargarInventarioInicial()">⚙️ Cargar Stock Inicial (Solo primer día)</button>
+    <button class="btn-init" onclick="cargarInventarioInicial()">⚙️ Actualizar / Cargar Stock Inicial</button>
   </div>
 
   <div class="card">
@@ -240,10 +237,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Imagen integrada para A0018
-  const imgA0018 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="; 
-  // Nota: Se ha mapeado la foto que subiste para el SKU A0018 en los datos iniciales.
-
   const datosOriginales = [
     { codigo: "A: 251", cantidad: 122, observaciones: "", imagen: "" },
     { codigo: "EG: 304", cantidad: 54, observaciones: "", imagen: "" },
@@ -254,7 +247,7 @@
     { codigo: "252", cantidad: 103, observaciones: "", imagen: "" },
     { codigo: "B 2524", cantidad: 87, observaciones: "", imagen: "" },
     { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado", imagen: "" },
-    { codigo: "A0018", cantidad: 94, observaciones: "Revisado", imagen: "https://i.ibb.co/6y1v2b1/pvc-a0018.jpg" }, // Referencia visual añadida
+    { codigo: "A0018", cantidad: 94, observaciones: "Revisado / Visto bueno", imagen: "https://i.ibb.co/6y1v2b1/pvc-a0018.jpg" },
     { codigo: "A250", cantidad: 44, observaciones: "Revisado", imagen: "" },
     { codigo: "2531", cantidad: 103, observaciones: "", imagen: "" },
     { codigo: "2598", cantidad: 161, observaciones: "Revisado", imagen: "" },
@@ -319,13 +312,13 @@
   }
 
   window.cargarInventarioInicial = async function() {
-    if(!confirm("¿Cargar stock inicial en la nube?")) return;
+    if(!confirm("¿Actualizar y cargar el stock con las imágenes en la nube?")) return;
     try {
       for (let item of datosOriginales) {
         let docId = item.codigo.replace(/[^a-zA-Z0-9]/g, '_');
-        await setDoc(doc(db, "laminas_pvc", docId), item);
+        await setDoc(doc(db, "laminas_pvc", docId), item, { merge: true });
       }
-      mostrarAlerta("¡Stock inicial cargado con éxito!");
+      mostrarAlerta("¡Stock e imágenes actualizados con éxito!");
     } catch (e) {
       mostrarAlerta("Error: " + e.message, true);
     }
