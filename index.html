@@ -19,6 +19,7 @@
     .badge-ok { color: #16a34a; font-weight: bold; }
     .badge-no { color: #dc2626; font-weight: bold; }
     .total-box { font-size: 16px; font-weight: bold; margin-top: 10px; text-align: right; }
+    .loading { text-align: center; font-style: italic; color: #666; }
   </style>
 </head>
 <body>
@@ -45,14 +46,14 @@
     <input type="number" id="cantidad" placeholder="Ej. 10">
 
     <label for="observacion">Observaciones / Notas:</label>
-    <input type="text" id="observacion" placeholder="Ej. Venta factura #123 o Revisado">
+    <input type="text" id="observacion" placeholder="Ej. Venta factura #123">
 
-    <button onclick="registrarMovimiento()">Registrar Movimiento</button>
+    <button id="btnGuardar" onclick="registrarMovimiento()">Registrar en Google Sheets</button>
   </div>
 
   <!-- Tabla de Inventario Actual -->
   <div class="card">
-    <h2>Stock Actual de Láminas</h2>
+    <h2>Stock Actual Sincronizado</h2>
     <div style="overflow-x: auto;">
       <table>
         <thead>
@@ -64,7 +65,7 @@
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <!-- Se llena con JavaScript -->
+          <tr><td colspan="4" class="loading">Cargando datos desde la nube...</td></tr>
         </tbody>
       </table>
     </div>
@@ -74,27 +75,24 @@
 </div>
 
 <script>
-  // Datos iniciales extraídos de tu registro físico
-  let inventario = JSON.parse(localStorage.getItem('pvc_inventario')) || [
-    { codigo: "A: 251", stock: 122, obs: "" },
-    { codigo: "EG: 304", stock: 54, obs: "" },
-    { codigo: "302", stock: 6, obs: "" },
-    { codigo: "054", stock: 54, obs: "" },
-    { codigo: "D 0247", stock: 24, obs: "Visto bueno" },
-    { codigo: "A2502", stock: 18, obs: "" },
-    { codigo: "252", stock: 103, obs: "" },
-    { codigo: "B 2524", stock: 87, obs: "" },
-    { codigo: "D: 3057", stock: 81, obs: "Visto bueno" },
-    { codigo: "A-001-8", stock: 94, obs: "Visto bueno" },
-    { codigo: "A-250", stock: 44, obs: "Visto bueno" },
-    { codigo: "2531", stock: 103, obs: "" },
-    { codigo: "2598", stock: 161, obs: "Visto bueno" },
-    { codigo: "2522", stock: 0, obs: "NO HAY" },
-    { codigo: "052", stock: 50, obs: "" },
-    { codigo: "039", stock: 100, obs: "" }
-  ];
+  // PEGA AQUÍ LA URL DE TU APLICACIÓN WEB DE GOOGLE APPS SCRIPT:
+  const URL_API = 'PEGAR_AQUÍ_TU_URL_DE_APPS_SCRIPT';
 
-  function actualizarPantalla() {
+  let inventario = [];
+
+  async function cargarInventario() {
+    try {
+      let respuesta = await fetch(URL_API);
+      let datos = await respuesta.json();
+      inventario = datos;
+      renderizarTabla();
+    } catch (error) {
+      console.error('Error al cargar inventario:', error);
+      document.getElementById('tablaInventario').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Error al conectar con Google Sheets.</td></tr>`;
+    }
+  }
+
+  function renderizarTabla() {
     const tabla = document.getElementById('tablaInventario');
     const select = document.getElementById('codigoSelect');
     
@@ -103,24 +101,30 @@
     
     let totalAcumulado = 0;
 
+    if (inventario.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay registros disponibles.</td></tr>`;
+      return;
+    }
+
     inventario.forEach((item) => {
-      totalAcumulado += Number(item.stock);
+      let stockNum = Number(item.cantidad) || 0;
+      totalAcumulado += stockNum;
       
-      let estadoHTML = item.stock > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
+      let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
+      
       tabla.innerHTML += `
         <tr>
-          <td><b>${item.codigo}</b></td>
-          <td>${item.stock}</td>
+          <td><b>${item.codigo || ''}</b></td>
+          <td>${stockNum}</td>
           <td>${estadoHTML}</td>
-          <td>${item.obs || '-'}</td>
+          <td>${item.observaciones || '-'}</td>
         </tr>
       `;
 
-      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${item.stock})</option>`;
+      select.innerHTML += `<option value="${item.codigo}">${item.codigo} (Stock: ${stockNum})</option>`;
     });
 
     document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
-    localStorage.setItem('pvc_inventario', JSON.stringify(inventario));
   }
 
   function completarSKU() {
@@ -130,7 +134,7 @@
     }
   }
 
-  function registrarMovimiento() {
+  async function registrarMovimiento() {
     let codigo = document.getElementById('codigoManual').value.trim();
     let tipo = document.getElementById('tipoMovimiento').value;
     let cantidad = parseInt(document.getElementById('cantidad').value);
@@ -145,39 +149,41 @@
       return;
     }
 
-    let producto = inventario.find(item => item.codigo.toLowerCase() === codigo.toLowerCase());
+    // Preparar texto para Google Sheets
+    let observacionFinal = `${tipo}: ${cantidad} | ${obs}`;
+    let btn = document.getElementById('btnGuardar');
+    btn.innerText = 'Enviando a la nube...';
+    btn.disabled = true;
 
-    if (tipo === 'Entrada') {
-      if (producto) {
-        producto.stock += cantidad;
-        if(obs) producto.obs = obs;
-      } else {
-        inventario.push({ codigo: codigo, stock: cantidad, obs: obs || 'Nuevo ingreso' });
-      }
-    } else if (tipo === 'Salida') {
-      if (producto) {
-        if (producto.stock < cantidad) {
-          alert(`Stock insuficiente. Solo quedan ${producto.stock} unidades.`);
-          return;
-        }
-        producto.stock -= cantidad;
-        if(obs) producto.obs = obs;
-      } else {
-        alert('Este código no existe en el inventario actual para registrar una salida.');
-        return;
-      }
+    try {
+      await fetch(URL_API, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: codigo, cantidad: tipo === 'Salida' ? -cantidad : cantidad, observaciones: observacionFinal })
+      });
+
+      alert('¡Movimiento registrado con éxito en Google Sheets!');
+      
+      // Limpiar campos
+      document.getElementById('codigoManual').value = '';
+      document.getElementById('codigoSelect').value = '';
+      document.getElementById('cantidad').value = '';
+      document.getElementById('observacion').value = '';
+
+      // Recargar datos desde Google Sheets
+      setTimeout(cargarInventario, 2000);
+
+    } catch (error) {
+      alert('Hubo un error al guardar el registro.');
+    } finally {
+      btn.innerText = 'Registrar en Google Sheets';
+      btn.disabled = false;
     }
-
-    document.getElementById('codigoManual').value = '';
-    document.getElementById('codigoSelect').value = '';
-    document.getElementById('cantidad').value = '';
-    document.getElementById('observacion').value = '';
-
-    actualizarPantalla();
-    alert('¡Movimiento registrado con éxito!');
   }
 
-  actualizarPantalla();
+  // Cargar al abrir la página
+  cargarInventario();
 </script>
 
 </body>
