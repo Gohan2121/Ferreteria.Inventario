@@ -47,11 +47,11 @@
     <label for="observacion">Observaciones / Notas:</label>
     <input type="text" id="observacion" placeholder="Ej. Venta factura #123">
 
-    <button id="btnGuardar" onclick="registrarMovimiento()">Registrar en Google Sheets</button>
+    <button id="btnGuardar" onclick="registrarMovimiento()">Registrar Movimiento</button>
   </div>
 
   <div class="card">
-    <h2>Stock Actual Sincronizado</h2>
+    <h2>Stock Actual en Bodega</h2>
     <div style="overflow-x: auto;">
       <table>
         <thead>
@@ -63,7 +63,7 @@
           </tr>
         </thead>
         <tbody id="tablaInventario">
-          <tr><td colspan="4" class="loading">Cargando datos desde Google Sheets...</td></tr>
+          <tr><td colspan="4" class="loading">Cargando inventario...</td></tr>
         </tbody>
       </table>
     </div>
@@ -73,22 +73,25 @@
 </div>
 
 <script>
-  // Nueva URL de Apps Script integrada:
-  const URL_API = 'https://script.google.com/macros/s/AKfycby5CqMP5gDwPpyQI0YMEKwYgBbIRcdPVELupMkdJ8TLkquSR6MHRYvVWtGH0VJ04Ds/exec';
-
-  let inventario = [];
-
-  async function cargarInventario() {
-    try {
-      let respuesta = await fetch(URL_API);
-      let datos = await respuesta.json();
-      inventario = datos;
-      renderizarTabla();
-    } catch (error) {
-      console.error('Error al cargar inventario:', error);
-      document.getElementById('tablaInventario').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Error al conectar con Google Sheets.</td></tr>`;
-    }
-  }
+  // Inventario base respaldado para carga instantánea
+  let inventario = JSON.parse(localStorage.getItem('pvc_inventario')) || [
+    { codigo: "A: 251", cantidad: 122, observaciones: "" },
+    { codigo: "EG: 304", cantidad: 54, observaciones: "" },
+    { codigo: "302", cantidad: 6, observaciones: "" },
+    { codigo: "054", cantidad: 54, observaciones: "" },
+    { codigo: "D 0247", cantidad: 24, observaciones: "Revisado / Visto bueno" },
+    { codigo: "A2502", cantidad: 18, observaciones: "" },
+    { codigo: "252", cantidad: 103, observaciones: "" },
+    { codigo: "B 2524", cantidad: 87, observaciones: "" },
+    { codigo: "D: 3057", cantidad: 81, observaciones: "Revisado / Visto bueno" },
+    { codigo: "A0018", cantidad: 94, observaciones: "Revisado / Visto bueno" },
+    { codigo: "A250", cantidad: 44, observaciones: "Revisado / Visto bueno" },
+    { codigo: "2531", cantidad: 103, observaciones: "" },
+    { codigo: "2598", cantidad: 161, observaciones: "Revisado / Visto bueno" },
+    { codigo: "2522", cantidad: 0, observaciones: "NO HAY" },
+    { codigo: "52", cantidad: 50, observaciones: "" },
+    { codigo: "39", cantidad: 100, observaciones: "" }
+  ];
 
   function renderizarTabla() {
     const tabla = document.getElementById('tablaInventario');
@@ -99,18 +102,11 @@
     
     let totalAcumulado = 0;
 
-    if (inventario.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay registros disponibles.</td></tr>`;
-      return;
-    }
-
     inventario.forEach((item) => {
       let stockNum = Number(item.cantidad) || 0;
       let codigoVal = item.codigo || '';
       let obsVal = item.observaciones || '-';
       
-      if(!codigoVal) return;
-
       totalAcumulado += stockNum;
       let estadoHTML = stockNum > 0 ? '<span class="badge-ok">Disponible</span>' : '<span class="badge-no">Agotado</span>';
       
@@ -127,6 +123,7 @@
     });
 
     document.getElementById('totalGeneral').innerText = `Total general en bodega: ${totalAcumulado} láminas`;
+    localStorage.setItem('pvc_inventario', JSON.stringify(inventario));
   }
 
   function completarSKU() {
@@ -136,7 +133,7 @@
     }
   }
 
-  async function registrarMovimiento() {
+  function registrarMovimiento() {
     let codigo = document.getElementById('codigoManual').value.trim();
     let tipo = document.getElementById('tipoMovimiento').value;
     let cantidad = parseInt(document.getElementById('cantidad').value);
@@ -151,38 +148,41 @@
       return;
     }
 
-    let cantidadFinal = tipo === 'Salida' ? -cantidad : cantidad;
-    let observacionFinal = `${tipo}: ${cantidad} | ${obs}`;
-    let btn = document.getElementById('btnGuardar');
-    btn.innerText = 'Enviando a la nube...';
-    btn.disabled = true;
+    let producto = inventario.find(item => item.codigo.toLowerCase() === codigo.toLowerCase());
 
-    try {
-      await fetch(URL_API, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: codigo, cantidad: cantidadFinal, observaciones: observacionFinal })
-      });
-
-      alert('¡Movimiento registrado con éxito!');
-      
-      document.getElementById('codigoManual').value = '';
-      document.getElementById('codigoSelect').value = '';
-      document.getElementById('cantidad').value = '';
-      document.getElementById('observacion').value = '';
-
-      setTimeout(cargarInventario, 2500);
-
-    } catch (error) {
-      alert('Hubo un error al guardar el registro.');
-    } finally {
-      btn.innerText = 'Registrar en Google Sheets';
-      btn.disabled = false;
+    if (tipo === 'Entrada') {
+      if (producto) {
+        producto.cantidad += cantidad;
+        if(obs) producto.observaciones = obs;
+      } else {
+        inventario.push({ codigo: codigo, cantidad: cantidad, observaciones: obs || 'Nuevo ingreso' });
+      }
+    } else if (tipo === 'Salida') {
+      if (producto) {
+        if (producto.cantidad < cantidad) {
+          alert(`Stock insuficiente. Solo quedan ${producto.cantidad} unidades.`);
+          return;
+        }
+        producto.cantidad -= cantidad;
+        if(obs) producto.observaciones = obs;
+      } else {
+        alert('Este código no existe en el inventario actual para registrar una salida.');
+        return;
+      }
     }
+
+    alert('¡Movimiento registrado con éxito!');
+    
+    document.getElementById('codigoManual').value = '';
+    document.getElementById('codigoSelect').value = '';
+    document.getElementById('cantidad').value = '';
+    document.getElementById('observacion').value = '';
+
+    renderizarTabla();
   }
 
-  cargarInventario();
+  // Cargar inventario inmediatamente de forma local y fluida
+  renderizarTabla();
 </script>
 
 </body>
