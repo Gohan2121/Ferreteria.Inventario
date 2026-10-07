@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stock en Tiempo Real - Tumbado</title>
+    <title>Inventario Tumbado PVC</title>
     <style>
         :root {
-            --primary: #0f172a;
-            --header-bg: #0b1528;
+            --primary: #1e3a8a;
+            --primary-bg: #2563eb;
             --success: #15803d;
             --danger: #b91c1c;
             --border: #cbd5e1;
             --bg: #f8fafc;
+            --card-bg: #ffffff;
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-sub: #475569;
         }
 
         * {
@@ -27,488 +28,406 @@
         body {
             background-color: var(--bg);
             color: var(--text-main);
-            padding: 10px;
-            padding-bottom: 40px;
+            padding: 12px;
+            padding-bottom: 50px;
         }
 
-        .main-box {
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .title-bar {
-            padding: 14px;
-            text-align: center;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .title-bar h2 {
-            font-size: 1.2rem;
-            color: #0b1528;
-            font-weight: 700;
-        }
-
-        .summary-bar {
-            display: flex;
-            background: #f1f5f9;
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-            justify-content: space-around;
-            text-align: center;
-        }
-
-        .sum-item span {
-            display: block;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-
-        .sum-item strong {
-            font-size: 1.1rem;
-            color: #0b1528;
-        }
-
-        .search-container {
-            padding: 8px 12px;
-            background: #ffffff;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 9px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-        }
-
-        thead th {
-            background-color: var(--header-bg);
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bg));
             color: #ffffff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
             font-weight: 700;
-            text-align: left;
-            padding: 10px 8px;
-            white-space: nowrap;
         }
 
-        tbody tr {
-            border-bottom: 1px solid #e2e8f0;
+        .header p {
+            font-size: 0.8rem;
+            opacity: 0.9;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        tbody td {
-            padding: 9px 8px;
-            vertical-align: middle;
-        }
-
-        .sku-code {
-            font-weight: 700;
-            color: #0f172a;
-            white-space: nowrap;
-        }
-
-        .stock-val {
-            font-size: 1rem;
-            font-weight: 800;
-            text-align: right;
-            padding-right: 8px;
-            white-space: nowrap;
-        }
-
-        .badge {
+        .status-pill {
             display: inline-block;
-            padding: 3px 7px;
-            border-radius: 15px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 0.72rem;
             font-weight: 700;
-            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.25);
+            margin-top: 6px;
         }
 
-        .badge-ok { background: #dcfce7; color: var(--success); }
-        .badge-zero { background: #fee2e2; color: var(--danger); }
-
-        .action-flex {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            justify-content: flex-end;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
-        .btn-act {
-            border: none;
-            padding: 6px 9px;
-            border-radius: 4px;
+        .stat-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-sub);
             font-weight: 700;
-            font-size: 0.75rem;
+        }
+
+        .stat-val {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        .search-box {
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            outline: none;
+            background: #ffffff;
+        }
+
+        .item-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .item-code {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .item-stock {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .item-stock.empty {
+            color: var(--danger);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .quick-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 8px 10px;
+            font-weight: 800;
+            border-radius: 6px;
+            font-size: 0.85rem;
             cursor: pointer;
-            color: white;
-            white-space: nowrap;
+        }
+
+        .qty-input {
+            width: 50px;
+            padding: 8px 2px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .btn-op {
+            flex: 1;
+            padding: 10px 4px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            text-align: center;
         }
 
         .btn-in { background-color: var(--success); }
         .btn-out { background-color: var(--danger); }
-        
-        .val-input {
-            width: 42px;
-            text-align: center;
-            padding: 5px;
-            font-weight: 700;
-            border: 1px solid var(--border);
-            border-radius: 4px;
+
+        .add-box {
+            background: #ffffff;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .add-box h3 {
             font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .add-row input {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .loading-notice {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-sub);
+            font-size: 0.9rem;
         }
     </style>
+
+    <!-- SDK Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<div class="main-box">
-    <div class="title-bar">
-        <h2>Stock en Tiempo Real</h2>
+    <div class="header">
+        <h1>Inventario Tumbado PVC</h1>
+        <p>Conectado a Firebase: <b>inventariopvc-9865e</b></p>
+        <span id="connStatus" class="status-pill">Conectando a Firestore...</span>
     </div>
 
-    <div class="summary-bar">
-        <div class="sum-item">
-            <span>SKU</span>
-            <strong id="totalSkus">16</strong>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-label">Modelos</div>
+            <div class="stat-val" id="totalItems">0</div>
         </div>
-        <div class="sum-item">
-            <span>Total Stock</span>
-            <strong id="totalStock">847</strong>
+        <div class="stat-box">
+            <div class="stat-label">Unidades</div>
+            <div class="stat-val" id="totalUnits">0</div>
         </div>
-        <div class="sum-item">
-            <span>Agotados</span>
-            <strong id="outStock" style="color: var(--danger);">1</strong>
+        <div class="stat-box">
+            <div class="stat-label">Agotados</div>
+            <div class="stat-val" id="outStock" style="color: var(--danger);">0</div>
         </div>
     </div>
 
-    <div class="search-container">
-        <input type="text" id="filterInput" placeholder="🔍 Filtrar SKU / Código..." onkeyup="filterTable()">
+    <!-- Agregar documento a Firestore -->
+    <div class="add-box">
+        <h3>+ Agregar documento a Firestore</h3>
+        <div class="add-row">
+            <input type="text" id="newDocId" placeholder="ID (ej. PH_08N)" style="flex: 2;">
+            <input type="number" id="newDocStock" placeholder="Stock" style="flex: 1;" min="0">
+            <button class="btn-add" onclick="addNewDocument()">Crear</button>
+        </div>
     </div>
 
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>SKU</th>
-                    <th style="text-align: right;">Stock</th>
-                    <th style="text-align: center;">Estado</th>
-                    <th style="text-align: right;">Operación</th>
-                </tr>
-            </thead>
-            <tbody id="inventoryTable">
-                <tr>
-                    <td class="sku-code">A: 251</td>
-                    <td class="stock-val" id="st-0">122</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-0">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-0" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(0, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(0, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">EC: 304</td>
-                    <td class="stock-val" id="st-1">54</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-1">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-1" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(1, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(1, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">302</td>
-                    <td class="stock-val" id="st-2">6</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-2">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-2" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(2, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(2, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">054</td>
-                    <td class="stock-val" id="st-3">54</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-3">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-3" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(3, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(3, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">D: 0247</td>
-                    <td class="stock-val" id="st-4">24</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-4">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-4" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(4, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(4, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">A2502</td>
-                    <td class="stock-val" id="st-5">18</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-5">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-5" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(5, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(5, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">252</td>
-                    <td class="stock-val" id="st-6">103</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-6">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-6" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(6, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(6, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">B 2524</td>
-                    <td class="stock-val" id="st-7">87</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-7">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-7" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(7, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(7, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">D: 3057</td>
-                    <td class="stock-val" id="st-8">81</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-8">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-8" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(8, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(8, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">A-001-8</td>
-                    <td class="stock-val" id="st-9">94</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-9">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-9" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(9, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(9, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">A-250</td>
-                    <td class="stock-val" id="st-10">44</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-10">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-10" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(10, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(10, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">2531</td>
-                    <td class="stock-val" id="st-11">103</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-11">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-11" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(11, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(11, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">2598</td>
-                    <td class="stock-val" id="st-12">161</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-12">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-12" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(12, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(12, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">2522</td>
-                    <td class="stock-val" id="st-13" style="color: var(--danger);">0</td>
-                    <td style="text-align: center;"><span class="badge badge-zero" id="bg-13">Agotado (0)</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-13" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(13, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(13, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">052</td>
-                    <td class="stock-val" id="st-14">50</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-14">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-14" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(14, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(14, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="sku-code">039</td>
-                    <td class="stock-val" id="st-15">100</td>
-                    <td style="text-align: center;"><span class="badge badge-ok" id="bg-15">Disponible</span></td>
-                    <td>
-                        <div class="action-flex">
-                            <input type="number" id="in-15" class="val-input" value="1" min="1">
-                            <button class="btn-act btn-in" onclick="updateStock(15, 1)">+ Ent</button>
-                            <button class="btn-act btn-out" onclick="updateStock(15, -1)">- Sal</button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar código (ej. D_0247, ETERNIT)..." onkeyup="filterList()">
     </div>
-</div>
+
+    <div id="listContainer">
+        <div class="loading-notice">Cargando base de datos de Firebase...</div>
+    </div>
 
 <script>
-    var items = [
-        { code: "A: 251", qty: 122 },
-        { code: "EC: 304", qty: 54 },
-        { code: "302", qty: 6 },
-        { code: "054", qty: 54 },
-        { code: "D: 0247", qty: 24 },
-        { code: "A2502", qty: 18 },
-        { code: "252", qty: 103 },
-        { code: "B 2524", qty: 87 },
-        { code: "D: 3057", qty: 81 },
-        { code: "A-001-8", qty: 94 },
-        { code: "A-250", qty: 44 },
-        { code: "2531", qty: 103 },
-        { code: "2598", qty: 161 },
-        { code: "2522", qty: 0 },
-        { code: "052", qty: 50 },
-        { code: "039", qty: 100 }
-    ];
+    // Configuración completa de tu consola Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBZatVDM_4fZ-7V3ujpWMGu3FIM-XqkQL4",
+        authDomain: "inventariopvc-9865e.firebaseapp.com",
+        projectId: "inventariopvc-9865e",
+        storageBucket: "inventariopvc-9865e.firebasestorage.app",
+        messagingSenderId: "418733149343",
+        appId: "1:418733149343:web:7cc8630f6d3895cb28a6aa",
+        measurementId: "G-HSXVQZ2L7L"
+    };
 
-    try {
-        var saved = localStorage.getItem('tumbado_fixed_data');
-        if (saved) {
-            var parsed = JSON.parse(saved);
-            for (var i = 0; i < parsed.length; i++) {
-                items[i].qty = parsed[i].qty;
-            }
-            refreshView();
-        }
-    } catch(e) {}
+    // Nombre de la colección en Firestore
+    // (Si en Firestore tu colección se llama diferente a 'inventario', cámbialo aquí)
+    const COLLECTION_NAME = "inventario";
 
-    function updateStock(idx, sign) {
-        var input = document.getElementById('in-' + idx);
-        var amount = parseInt(input.value);
-        if (isNaN(amount) || amount <= 0) {
-            alert("Introduce un número válido");
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let inventoryDocs = [];
+
+    // Escucha en tiempo real de Firestore
+    db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
+        document.getElementById('connStatus').innerText = "● Conectado en Vivo (Firestore)";
+        document.getElementById('connStatus').style.background = "rgba(34, 197, 94, 0.4)";
+
+        inventoryDocs = [];
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            let qty = 0;
+            if (typeof data.stock === 'number') qty = data.stock;
+            else if (typeof data.cantidad === 'number') qty = data.cantidad;
+            else if (typeof data.unidades === 'number') qty = data.unidades;
+            else if (!isNaN(parseInt(data.stock))) qty = parseInt(data.stock);
+            else if (!isNaN(parseInt(data.cantidad))) qty = parseInt(data.cantidad);
+
+            inventoryDocs.push({
+                id: doc.id,
+                stock: qty
+            });
+        });
+
+        renderList();
+    }, (error) => {
+        console.error("Error Firestore:", error);
+        document.getElementById('connStatus').innerText = "Error: Reglas / Permisos";
+        document.getElementById('connStatus').style.background = "rgba(220, 38, 38, 0.5)";
+        document.getElementById('listContainer').innerHTML = 
+            '<div class="loading-notice" style="color:var(--danger);">' +
+            'Ve a <b>Firestore Database -> Reglas</b> en tu consola y asegúrate de permitir lectura/escritura (allow read, write: if true;).' +
+            '</div>';
+    });
+
+    async function updateFirebaseStock(docId, delta) {
+        const item = inventoryDocs.find(d => d.id === docId);
+        if (!item) return;
+
+        if (delta < 0 && Math.abs(delta) > item.stock) {
+            alert(`Stock insuficiente en Firestore. Solo quedan ${item.stock} unidades de ${docId}.`);
             return;
         }
-
-        var current = items[idx].qty;
-        if (sign < 0 && amount > current) {
-            alert("No hay suficiente stock. Tienes " + current + " un.");
-            return;
-        }
-
-        items[idx].qty += (sign * amount);
-        input.value = 1;
 
         try {
-            localStorage.setItem('tumbado_fixed_data', JSON.stringify(items));
-        } catch(e) {}
-
-        refreshView();
-    }
-
-    function refreshView() {
-        var total = 0;
-        var empty = 0;
-
-        for (var i = 0; i < items.length; i++) {
-            var q = items[i].qty;
-            total += q;
-            if (q === 0) empty++;
-
-            var stEl = document.getElementById('st-' + i);
-            var bgEl = document.getElementById('bg-' + i);
-
-            if (stEl) {
-                stEl.innerText = q;
-                stEl.style.color = q > 0 ? '#0f172a' : '#b91c1c';
-            }
-            if (bgEl) {
-                bgEl.className = 'badge ' + (q > 0 ? 'badge-ok' : 'badge-zero');
-                bgEl.innerText = q > 0 ? 'Disponible' : 'Agotado (0)';
-            }
-        }
-
-        document.getElementById('totalStock').innerText = total;
-        document.getElementById('outStock').innerText = empty;
-    }
-
-    function filterTable() {
-        var q = document.getElementById('filterInput').value.toLowerCase();
-        var rows = document.getElementById('inventoryTable').getElementsByTagName('tr');
-        for (var i = 0; i < rows.length; i++) {
-            var sku = rows[i].getElementsByClassName('sku-code')[0];
-            if (sku) {
-                var text = sku.textContent || sku.innerText;
-                rows[i].style.display = text.toLowerCase().indexOf(q) > -1 ? '' : 'none';
-            }
+            await db.collection(COLLECTION_NAME).doc(docId).update({
+                stock: firebase.firestore.FieldValue.increment(delta)
+            });
+        } catch(e) {
+            await db.collection(COLLECTION_NAME).doc(docId).set({
+                stock: Math.max(0, item.stock + delta)
+            }, { merge: true });
         }
     }
 
-    refreshView();
+    function operateInput(docId, type) {
+        const input = document.getElementById("in-" + docId);
+        const val = parseInt(input.value);
+        if (isNaN(val) || val <= 0) return alert("Ingresa un número válido");
+        updateFirebaseStock(docId, type === 'add' ? val : -val);
+        input.value = 1;
+    }
+
+    async function addNewDocument() {
+        const docId = document.getElementById('newDocId').value.trim();
+        const stock = parseInt(document.getElementById('newDocStock').value);
+
+        if (!docId) return alert("Escribe el ID del documento");
+        if (isNaN(stock) || stock < 0) return alert("Stock inicial inválido");
+
+        try {
+            await db.collection(COLLECTION_NAME).doc(docId).set({
+                stock: stock,
+                fecha: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            document.getElementById('newDocId').value = '';
+            document.getElementById('newDocStock').value = '';
+        } catch(err) {
+            alert("Error al agregar: " + err.message);
+        }
+    }
+
+    function renderList() {
+        const container = document.getElementById('listContainer');
+        container.innerHTML = '';
+
+        let totalUnits = 0;
+        let emptyCount = 0;
+
+        if (inventoryDocs.length === 0) {
+            container.innerHTML = '<div class="loading-notice">No hay documentos en la colección "' + COLLECTION_NAME + '". Revisa si el nombre coincide exactamente con tu consola.</div>';
+            return;
+        }
+
+        inventoryDocs.forEach((item) => {
+            totalUnits += item.stock;
+            if (item.stock === 0) emptyCount++;
+
+            const isAvailable = item.stock > 0;
+            const card = document.createElement('div');
+            card.className = "item-card";
+            card.setAttribute("data-code", item.id);
+
+            card.innerHTML = `
+                <div class="item-header">
+                    <div>
+                        <div class="item-code">${item.id}</div>
+                        <span style="font-size: 0.72rem; color: ${isAvailable ? "var(--success)" : "var(--danger)"}; font-weight: 700;">
+                            ${isAvailable ? "Disponible" : "Sin existencias (0)"}
+                        </span>
+                    </div>
+                    <div class="item-stock ${!isAvailable ? "empty" : ""}">
+                        ${item.stock} <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-sub);">un.</span>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="quick-btn" onclick="updateFirebaseStock('${item.id}', 1)">+1</button>
+                    <button class="quick-btn" onclick="updateFirebaseStock('${item.id}', -1)">-1</button>
+                    <input type="number" id="in-${item.id}" class="qty-input" value="1" min="1">
+                    <button class="btn-op btn-in" onclick="operateInput('${item.id}', 'add')">+ Entrada</button>
+                    <button class="btn-op btn-out" onclick="operateInput('${item.id}', 'remove')">- Salida</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        document.getElementById('totalItems').textContent = inventoryDocs.length;
+        document.getElementById('totalUnits').textContent = totalUnits;
+        document.getElementById('outStock').textContent = emptyCount;
+
+        filterList();
+    }
+
+    function filterList() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.item-card');
+        cards.forEach(card => {
+            const code = card.getAttribute('data-code').toLowerCase();
+            card.style.display = code.includes(query) ? 'block' : 'none';
+        });
+    }
 </script>
 
 </body>
