@@ -35,7 +35,6 @@
             padding-bottom: 70px;
         }
 
-        /* Barra Superior */
         .app-bar {
             background: var(--surface);
             padding: 14px 16px;
@@ -75,7 +74,6 @@
             display: inline-block;
         }
 
-        /* Estadísticas compactas */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -107,7 +105,6 @@
             display: block;
         }
 
-        /* Buscador fijo */
         .search-wrap {
             position: sticky;
             top: 10px;
@@ -132,7 +129,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
-        /* Tarjeta de Producto */
         .item-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -185,7 +181,6 @@
             color: var(--text-sub);
         }
 
-        /* Botones de acción táctiles */
         .controls-row {
             display: flex;
             align-items: center;
@@ -246,7 +241,6 @@
             font-size: 1.1rem;
         }
 
-        /* Agregar producto plegable */
         details.add-panel {
             background: var(--surface);
             border: 1px dashed var(--border);
@@ -297,9 +291,81 @@
             color: var(--text-sub);
             font-size: 0.95rem;
         }
+
+        /* Cuadro de Salidas al Final */
+        .history-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-top: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-header h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .history-table th {
+            background: #f1f5f9;
+            color: var(--text-sub);
+            font-weight: 700;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .history-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .out-badge {
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .date-text {
+            color: var(--text-sub);
+            font-size: 0.78rem;
+        }
     </style>
 
-    <!-- SDK Firebase Compat -->
+    <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
@@ -345,6 +411,31 @@
         <div class="empty-view">Cargando base de datos...</div>
     </main>
 
+    <!-- Cuadro de Salidas con Fecha -->
+    <section class="history-box">
+        <div class="history-header">
+            <h2>📦 Registro de Salidas</h2>
+            <small style="color: var(--text-sub); font-size: 0.75rem;">historial_movimientos</small>
+        </div>
+        <div class="history-table-wrap">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Código</th>
+                        <th style="text-align: right;">Cantidad Retirada</th>
+                        <th style="text-align: right;">Quedó en Bodega</th>
+                    </tr>
+                </thead>
+                <tbody id="exitHistoryBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-sub); padding: 18px;">Sin salidas registradas todavía.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyBZatVDM_4fZ-7V3ujpWMGu3FIM-XqkQL4",
@@ -357,12 +448,14 @@
     };
 
     const COLLECTION_NAME = "laminas_pvc";
+    const HISTORY_COLLECTION = "historial_movimientos";
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let inventoryDocs = [];
 
+    // 1. Escuchar láminas en vivo
     db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
         const badge = document.getElementById('connStatus');
         badge.innerText = "En Vivo";
@@ -395,6 +488,21 @@
         badge.style.color = "var(--danger)";
     });
 
+    // 2. Escuchar salidas en vivo para el cuadro final
+    db.collection(HISTORY_COLLECTION)
+      .where("tipo", "==", "salida")
+      .orderBy("fecha", "desc")
+      .limit(30)
+      .onSnapshot((snapshot) => {
+          renderExitHistory(snapshot);
+      }, (err) => {
+          // En caso de que el índice compuesto tarde en propagarse
+          db.collection(HISTORY_COLLECTION)
+            .limit(30)
+            .onSnapshot((s) => renderExitHistory(s));
+      });
+
+    // Modificar cantidad y guardar salida con fecha
     async function updateFirebaseStock(docId, delta) {
         const item = inventoryDocs.find(d => d.id === docId);
         if (!item) return;
@@ -404,15 +512,39 @@
             return;
         }
 
+        const nuevoStock = Math.max(0, item.stock + delta);
+
         try {
             await db.collection(COLLECTION_NAME).doc(docId).update({
                 cantidad: firebase.firestore.FieldValue.increment(delta)
             });
+
+            if (delta < 0) {
+                await db.collection(HISTORY_COLLECTION).add({
+                    tipo: "salida",
+                    codigo: item.codigo,
+                    docId: docId,
+                    cantidad: Math.abs(delta),
+                    stockRestante: nuevoStock,
+                    fecha: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
         } catch(e) {
             await db.collection(COLLECTION_NAME).doc(docId).set({
-                cantidad: Math.max(0, item.stock + delta),
+                cantidad: nuevoStock,
                 codigo: item.codigo
             }, { merge: true });
+
+            if (delta < 0) {
+                await db.collection(HISTORY_COLLECTION).add({
+                    tipo: "salida",
+                    codigo: item.codigo,
+                    docId: docId,
+                    cantidad: Math.abs(delta),
+                    stockRestante: nuevoStock,
+                    fecha: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
         }
     }
 
@@ -493,6 +625,47 @@
         document.getElementById('outStock').textContent = emptyCount;
 
         filterList();
+    }
+
+    function renderExitHistory(snapshot) {
+        const tbody = document.getElementById('exitHistoryBody');
+        let exits = [];
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.tipo === "salida") {
+                exits.push(data);
+            }
+        });
+
+        if (exits.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-sub); padding: 18px;">Sin salidas registradas todavía.</td></tr>';
+            return;
+        }
+
+        exits.sort((a, b) => {
+            const timeA = a.fecha && a.fecha.toMillis ? a.fecha.toMillis() : 0;
+            const timeB = b.fecha && b.fecha.toMillis ? b.fecha.toMillis() : 0;
+            return timeB - timeA;
+        });
+
+        tbody.innerHTML = exits.map(item => {
+            let fechaStr = "Reciente";
+            if (item.fecha && item.fecha.toDate) {
+                const d = item.fecha.toDate();
+                fechaStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
+                           " " + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            return `
+                <tr>
+                    <td class="date-text">📅 ${fechaStr}</td>
+                    <td><strong>${item.codigo || '-'}</strong></td>
+                    <td style="text-align: right;"><span class="out-badge">-${item.cantidad} un.</span></td>
+                    <td style="text-align: right; font-weight: 700; color: var(--primary);">${item.stockRestante ?? '-'} un.</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     function filterList() {
