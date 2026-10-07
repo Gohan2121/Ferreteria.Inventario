@@ -105,16 +105,23 @@
             display: block;
         }
 
+        /* Buscador con Sugerencias Rápidas */
         .search-wrap {
             position: sticky;
             top: 10px;
-            z-index: 10;
+            z-index: 20;
             margin-bottom: 12px;
+            background: var(--bg);
+            padding-bottom: 4px;
+        }
+
+        .search-box-inner {
+            position: relative;
         }
 
         .search-input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 40px 14px 16px;
             font-size: 1rem;
             border-radius: var(--radius);
             border: 1px solid var(--border);
@@ -127,6 +134,90 @@
         .search-input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Menú desplegable de sugerencias */
+        .suggestions-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+            z-index: 30;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:active, .suggestion-item:hover {
+            background: var(--primary-soft);
+        }
+
+        .sugg-stock {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        /* Chips / Filtros de acceso rápido */
+        .quick-chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px 2px 2px 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            white-space: nowrap;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
         .item-card {
@@ -292,7 +383,6 @@
             font-size: 0.95rem;
         }
 
-        /* Cuadro de Salidas al Final */
         .history-box {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -394,8 +484,20 @@
         </div>
     </section>
 
+    <!-- Buscador con Sugerencias y Botones -->
     <div class="search-wrap">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar código (ej. 054, 252, A250)..." onkeyup="filterList()">
+        <div class="search-box-inner">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Toca aquí o escribe un código..." oninput="handleSearchInput()" onfocus="handleSearchFocus()">
+            <button id="clearSearchBtn" class="clear-btn" onclick="clearSearch()">✕</button>
+            <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
+        </div>
+        <div class="quick-chips">
+            <button class="chip active" onclick="setQuickFilter('all', this)">Todos</button>
+            <button class="chip" onclick="setQuickFilter('out', this)">⚠️ Agotados (0)</button>
+            <button class="chip" onclick="setQuickFilter('PH', this)">Prefijo PH</button>
+            <button class="chip" onclick="setQuickFilter('ETERNIT', this)">Eternit</button>
+            <button class="chip" onclick="setQuickFilter('A', this)">Prefijo A</button>
+        </div>
     </div>
 
     <details class="add-panel">
@@ -411,7 +513,6 @@
         <div class="empty-view">Cargando base de datos...</div>
     </main>
 
-    <!-- Cuadro de Salidas con Fecha -->
     <section class="history-box">
         <div class="history-header">
             <h2>📦 Registro de Salidas</h2>
@@ -454,8 +555,8 @@
     const db = firebase.firestore();
 
     let inventoryDocs = [];
+    let currentFilterType = 'all';
 
-    // 1. Escuchar láminas en vivo
     db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
         const badge = document.getElementById('connStatus');
         badge.innerText = "En Vivo";
@@ -479,6 +580,7 @@
             });
         });
 
+        inventoryDocs.sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true }));
         renderList();
     }, (error) => {
         console.error("Error Firestore:", error);
@@ -488,7 +590,6 @@
         badge.style.color = "var(--danger)";
     });
 
-    // 2. Escuchar salidas en vivo para el cuadro final
     db.collection(HISTORY_COLLECTION)
       .where("tipo", "==", "salida")
       .orderBy("fecha", "desc")
@@ -496,13 +597,11 @@
       .onSnapshot((snapshot) => {
           renderExitHistory(snapshot);
       }, (err) => {
-          // En caso de que el índice compuesto tarde en propagarse
           db.collection(HISTORY_COLLECTION)
             .limit(30)
             .onSnapshot((s) => renderExitHistory(s));
       });
 
-    // Modificar cantidad y guardar salida con fecha
     async function updateFirebaseStock(docId, delta) {
         const item = inventoryDocs.find(d => d.id === docId);
         if (!item) return;
@@ -595,7 +694,9 @@
             const isAvailable = item.stock > 0;
             const card = document.createElement('article');
             card.className = "item-card";
+            card.id = `card-${item.id}`;
             card.setAttribute("data-code", item.codigo);
+            card.setAttribute("data-stock", item.stock);
 
             card.innerHTML = `
                 <div class="item-top">
@@ -624,7 +725,7 @@
         document.getElementById('totalUnits').textContent = totalUnits;
         document.getElementById('outStock').textContent = emptyCount;
 
-        filterList();
+        applyFilters();
     }
 
     function renderExitHistory(snapshot) {
@@ -668,14 +769,108 @@
         }).join('');
     }
 
-    function filterList() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
+    // Funciones del Buscador y Sugerencias
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const dropdown = document.getElementById('suggestionsDropdown');
+
+    function handleSearchFocus() {
+        showSuggestions(searchInput.value.trim());
+    }
+
+    function handleSearchInput() {
+        const query = searchInput.value;
+        clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+        showSuggestions(query.trim());
+        applyFilters();
+    }
+
+    function showSuggestions(query) {
+        const q = query.toLowerCase();
+        let matches = inventoryDocs;
+
+        if (q) {
+            matches = inventoryDocs.filter(d => d.codigo.toLowerCase().includes(q));
+        }
+
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; font-size:0.85rem; color:var(--text-sub); text-align:center;">No hay coincidencias</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+
+        const preview = matches.slice(0, 8);
+        dropdown.innerHTML = preview.map(item => `
+            <div class="suggestion-item" onclick="selectSuggestion('${item.codigo}', '${item.id}')">
+                <div>
+                    <strong>${item.codigo}</strong>
+                    ${item.obs ? `<small style="color:var(--text-sub); margin-left:6px;">(${item.obs})</small>` : ''}
+                </div>
+                <span class="sugg-stock ${item.stock === 0 ? 'color:var(--danger)' : ''}">${item.stock} un.</span>
+            </div>
+        `).join('');
+
+        dropdown.style.display = 'block';
+    }
+
+    function selectSuggestion(codigo, docId) {
+        searchInput.value = codigo;
+        clearBtn.style.display = 'block';
+        dropdown.style.display = 'none';
+        applyFilters();
+
+        const target = document.getElementById(`card-${docId}`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.style.outline = '2px solid var(--primary)';
+            setTimeout(() => target.style.outline = 'none', 1500);
+        }
+    }
+
+    function clearSearch() {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        dropdown.style.display = 'none';
+        applyFilters();
+    }
+
+    function setQuickFilter(type, btn) {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilterType = type;
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase().trim();
         const cards = document.querySelectorAll('.item-card');
+
         cards.forEach(card => {
             const code = card.getAttribute('data-code').toLowerCase();
-            card.style.display = code.includes(query) ? 'block' : 'none';
+            const stock = parseInt(card.getAttribute('data-stock'));
+
+            let matchesText = code.includes(query);
+            let matchesChip = true;
+
+            if (currentFilterType === 'out') {
+                matchesChip = stock === 0;
+            } else if (currentFilterType === 'PH') {
+                matchesChip = code.startsWith('ph');
+            } else if (currentFilterType === 'ETERNIT') {
+                matchesChip = code.startsWith('eternit');
+            } else if (currentFilterType === 'A') {
+                matchesChip = code.startsWith('a');
+            }
+
+            card.style.display = (matchesText && matchesChip) ? 'block' : 'none';
         });
     }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-wrap')) {
+            dropdown.style.display = 'none';
+        }
+    });
 </script>
 
 </body>
