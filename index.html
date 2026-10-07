@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Inventario Láminas PVC</title>
+    <title>Control Almacén - Láminas PVC</title>
     <style>
         :root {
-            --primary: #1e3a8a;
-            --primary-bg: #2563eb;
-            --success: #15803d;
-            --danger: #b91c1c;
-            --border: #cbd5e1;
             --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #475569;
+            --surface: #ffffff;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --text: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --success-soft: #dcfce7;
+            --danger: #dc2626;
+            --danger-soft: #fee2e2;
+            --radius: 14px;
         }
 
         * {
@@ -26,40 +29,53 @@
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            padding: 12px;
-            padding-bottom: 50px;
+            background: var(--bg);
+            color: var(--text);
+            padding: 12px 14px;
+            padding-bottom: 70px;
         }
 
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-bg));
-            color: #ffffff;
-            border-radius: 12px;
+        /* Barra Superior */
+        .app-bar {
+            background: var(--surface);
             padding: 14px 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
-        .header h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
+        .app-bar h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text);
         }
 
-        .header p {
-            font-size: 0.8rem;
-            opacity: 0.9;
-        }
-
-        .status-pill {
-            display: inline-block;
+        .badge-live {
+            background: var(--success-soft);
+            color: var(--success);
             padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.72rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 700;
-            background: rgba(255, 255, 255, 0.25);
-            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
+        .badge-live::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Estadísticas compactas */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -67,166 +83,219 @@
             margin-bottom: 12px;
         }
 
-        .stat-box {
-            background: var(--card-bg);
+        .stat-card {
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px;
+            border-radius: 12px;
+            padding: 10px;
             text-align: center;
         }
 
-        .stat-label {
-            font-size: 0.65rem;
+        .stat-card span {
+            font-size: 0.68rem;
             text-transform: uppercase;
-            color: var(--text-sub);
             font-weight: 700;
+            color: var(--text-sub);
+            display: block;
         }
 
-        .stat-val {
-            font-size: 1.15rem;
+        .stat-card strong {
+            font-size: 1.25rem;
             font-weight: 800;
             color: var(--primary);
             margin-top: 2px;
+            display: block;
         }
 
-        .search-box {
+        /* Buscador fijo */
+        .search-wrap {
+            position: sticky;
+            top: 10px;
+            z-index: 10;
             margin-bottom: 12px;
         }
 
-        .search-box input {
+        .search-input {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
+            padding: 14px 16px;
             font-size: 1rem;
-            outline: none;
-            background: #ffffff;
-        }
-
-        .item-card {
-            background: var(--card-bg);
+            border-radius: var(--radius);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            background: var(--surface);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            outline: none;
+            transition: all 0.2s;
         }
 
-        .item-header {
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Tarjeta de Producto */
+        .item-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .item-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .item-code {
-            font-size: 1.05rem;
-            font-weight: 700;
-        }
-
-        .item-stock {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 800;
-            color: var(--primary);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .item-stock.empty {
-            color: var(--danger);
-        }
-
-        .item-note {
+        .item-obs {
             font-size: 0.72rem;
             color: var(--text-sub);
             margin-top: 2px;
         }
 
-        .item-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            background: #f1f5f9;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+        .item-qty-box {
+            text-align: right;
         }
 
-        .quick-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 8px 10px;
-            font-weight: 800;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .qty-input {
-            width: 50px;
-            padding: 8px 2px;
-            text-align: center;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .btn-op {
-            flex: 1;
-            padding: 10px 4px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #ffffff;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .btn-in { background-color: var(--success); }
-        .btn-out { background-color: var(--danger); }
-
-        .add-box {
-            background: #ffffff;
-            border: 1px dashed var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-
-        .add-box h3 {
-            font-size: 0.85rem;
+        .item-qty-num {
+            font-size: 1.4rem;
+            font-weight: 900;
             color: var(--primary);
-            margin-bottom: 8px;
+            line-height: 1;
         }
 
-        .add-row {
+        .item-qty-num.zero {
+            color: var(--danger);
+        }
+
+        .item-qty-unit {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        /* Botones de acción táctiles */
+        .controls-row {
             display: flex;
-            gap: 6px;
-        }
-
-        .add-row input {
-            padding: 8px 10px;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg);
+            padding: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.9rem;
         }
 
-        .btn-add {
-            background: var(--primary);
-            color: #ffffff;
+        .qty-picker {
+            width: 55px;
+            height: 42px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+        }
+
+        .btn-touch {
+            height: 42px;
             border: none;
-            border-radius: 6px;
-            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-touch:active {
+            transform: scale(0.96);
+        }
+
+        .btn-entry {
+            flex: 1;
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-exit {
+            flex: 1;
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-step {
+            width: 42px;
+            background: #e2e8f0;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        /* Agregar producto plegable */
+        details.add-panel {
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        details.add-panel summary {
+            padding: 12px 16px;
+            font-size: 0.88rem;
             font-weight: 700;
-            font-size: 0.85rem;
+            color: var(--primary);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .add-content {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-content input {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .btn-save-new {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.9rem;
             cursor: pointer;
         }
 
-        .loading-notice {
+        .empty-view {
             text-align: center;
-            padding: 20px;
+            padding: 30px 15px;
             color: var(--text-sub);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
     </style>
 
@@ -236,43 +305,45 @@
 </head>
 <body>
 
-    <div class="header">
-        <h1>Inventario Láminas PVC</h1>
-        <p>Colección: <b>laminas_pvc</b></p>
-        <span id="connStatus" class="status-pill">Conectando a Firestore...</span>
+    <header class="app-bar">
+        <div>
+            <h1>Láminas PVC</h1>
+            <small style="color: var(--text-sub); font-size: 0.75rem;">Bodega en Tiempo Real</small>
+        </div>
+        <span id="connStatus" class="badge-live">En Vivo</span>
+    </header>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <span>Modelos</span>
+            <strong id="totalItems">0</strong>
+        </div>
+        <div class="stat-card">
+            <span>En Bodega</span>
+            <strong id="totalUnits">0</strong>
+        </div>
+        <div class="stat-card">
+            <span>Agotados</span>
+            <strong id="outStock" style="color: var(--danger);">0</strong>
+        </div>
+    </section>
+
+    <div class="search-wrap">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar código (ej. 054, 252, A250)..." onkeyup="filterList()">
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-box">
-            <div class="stat-label">Modelos</div>
-            <div class="stat-val" id="totalItems">0</div>
+    <details class="add-panel">
+        <summary>+ Crear nuevo código de lámina</summary>
+        <div class="add-content">
+            <input type="text" id="newDocId" placeholder="Código (ej. 055, B_2525)">
+            <input type="number" id="newDocStock" placeholder="Cantidad inicial" min="0">
+            <button class="btn-save-new" onclick="addNewDocument()">Guardar en Firestore</button>
         </div>
-        <div class="stat-box">
-            <div class="stat-label">Unidades</div>
-            <div class="stat-val" id="totalUnits">0</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Agotados</div>
-            <div class="stat-val" id="outStock" style="color: var(--danger);">0</div>
-        </div>
-    </div>
+    </details>
 
-    <div class="add-box">
-        <h3>+ Agregar nuevo producto a laminas_pvc</h3>
-        <div class="add-row">
-            <input type="text" id="newDocId" placeholder="ID / Código (ej. 055)" style="flex: 2;">
-            <input type="number" id="newDocStock" placeholder="Cant." style="flex: 1;" min="0">
-            <button class="btn-add" onclick="addNewDocument()">Crear</button>
-        </div>
-    </div>
-
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Buscar código (ej. 054, 252, A250)..." onkeyup="filterList()">
-    </div>
-
-    <div id="listContainer">
-        <div class="loading-notice">Cargando datos desde laminas_pvc...</div>
-    </div>
+    <main id="listContainer">
+        <div class="empty-view">Cargando base de datos...</div>
+    </main>
 
 <script>
     const firebaseConfig = {
@@ -285,7 +356,6 @@
         measurementId: "G-HSXVQZ2L7L"
     };
 
-    // Colección exacta: laminas_pvc
     const COLLECTION_NAME = "laminas_pvc";
 
     firebase.initializeApp(firebaseConfig);
@@ -293,16 +363,15 @@
 
     let inventoryDocs = [];
 
-    // Escucha en tiempo real de laminas_pvc
     db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
-        document.getElementById('connStatus').innerText = "● Conectado en Vivo (laminas_pvc)";
-        document.getElementById('connStatus').style.background = "rgba(34, 197, 94, 0.4)";
+        const badge = document.getElementById('connStatus');
+        badge.innerText = "En Vivo";
+        badge.style.background = "var(--success-soft)";
+        badge.style.color = "var(--success)";
 
         inventoryDocs = [];
         snapshot.forEach((doc) => {
             const data = doc.data();
-
-            // Campo numérico: cantidad
             let qty = 0;
             if (typeof data.cantidad === 'number') qty = data.cantidad;
             else if (typeof data.stock === 'number') qty = data.stock;
@@ -320,12 +389,10 @@
         renderList();
     }, (error) => {
         console.error("Error Firestore:", error);
-        document.getElementById('connStatus').innerText = "Error de Permisos en Reglas";
-        document.getElementById('connStatus').style.background = "rgba(220, 38, 38, 0.5)";
-        document.getElementById('listContainer').innerHTML = 
-            '<div class="loading-notice" style="color:var(--danger);">' +
-            'Asegúrate de haber publicado las Reglas de Firestore permitiendo read y write.' +
-            '</div>';
+        const badge = document.getElementById('connStatus');
+        badge.innerText = "Sin Acceso";
+        badge.style.background = "var(--danger-soft)";
+        badge.style.color = "var(--danger)";
     });
 
     async function updateFirebaseStock(docId, delta) {
@@ -333,7 +400,7 @@
         if (!item) return;
 
         if (delta < 0 && Math.abs(delta) > item.stock) {
-            alert(`Stock insuficiente en Firestore. Solo quedan ${item.stock} unidades de ${item.codigo}.`);
+            alert(`Stock insuficiente. Solo quedan ${item.stock} unidades de ${item.codigo}.`);
             return;
         }
 
@@ -361,19 +428,19 @@
         const docId = document.getElementById('newDocId').value.trim();
         const stock = parseInt(document.getElementById('newDocStock').value);
 
-        if (!docId) return alert("Escribe el ID / Código del documento");
+        if (!docId) return alert("Escribe el código del producto");
         if (isNaN(stock) || stock < 0) return alert("Cantidad inicial no válida");
 
         try {
             await db.collection(COLLECTION_NAME).doc(docId).set({
                 codigo: docId,
                 cantidad: stock,
-                observaciones: "Creado desde panel web"
+                observaciones: "Creado desde panel"
             }, { merge: true });
             document.getElementById('newDocId').value = '';
             document.getElementById('newDocStock').value = '';
         } catch(err) {
-            alert("Error al agregar: " + err.message);
+            alert("Error: " + err.message);
         }
     }
 
@@ -385,7 +452,7 @@
         let emptyCount = 0;
 
         if (inventoryDocs.length === 0) {
-            container.innerHTML = '<div class="loading-notice">No hay documentos en la colección "' + COLLECTION_NAME + '".</div>';
+            container.innerHTML = '<div class="empty-view">No hay productos en la colección "laminas_pvc".</div>';
             return;
         }
 
@@ -394,29 +461,28 @@
             if (item.stock === 0) emptyCount++;
 
             const isAvailable = item.stock > 0;
-            const card = document.createElement('div');
+            const card = document.createElement('article');
             card.className = "item-card";
             card.setAttribute("data-code", item.codigo);
 
             card.innerHTML = `
-                <div class="item-header">
+                <div class="item-top">
                     <div>
                         <div class="item-code">${item.codigo}</div>
-                        <span style="font-size: 0.72rem; color: ${isAvailable ? "var(--success)" : "var(--danger)"}; font-weight: 700;">
-                            ${isAvailable ? "Disponible" : "Sin existencias (0)"}
-                        </span>
-                        ${item.obs ? `<div class="item-note">${item.obs}</div>` : ''}
+                        ${item.obs ? `<div class="item-obs">${item.obs}</div>` : ''}
                     </div>
-                    <div class="item-stock ${!isAvailable ? "empty" : ""}">
-                        ${item.stock} <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-sub);">un.</span>
+                    <div class="item-qty-box">
+                        <div class="item-qty-num ${!isAvailable ? 'zero' : ''}">${item.stock}</div>
+                        <span class="item-qty-unit">${isAvailable ? 'unidades' : 'agotado'}</span>
                     </div>
                 </div>
-                <div class="item-actions">
-                    <button class="quick-btn" onclick="updateFirebaseStock('${item.id}', 1)">+1</button>
-                    <button class="quick-btn" onclick="updateFirebaseStock('${item.id}', -1)">-1</button>
-                    <input type="number" id="in-${item.id}" class="qty-input" value="1" min="1">
-                    <button class="btn-op btn-in" onclick="operateInput('${item.id}', 'add')">+ Entrada</button>
-                    <button class="btn-op btn-out" onclick="operateInput('${item.id}', 'remove')">- Salida</button>
+
+                <div class="controls-row">
+                    <button class="btn-touch btn-step" onclick="updateFirebaseStock('${item.id}', -1)">-1</button>
+                    <button class="btn-touch btn-step" onclick="updateFirebaseStock('${item.id}', 1)">+1</button>
+                    <input type="number" id="in-${item.id}" class="qty-picker" value="1" min="1">
+                    <button class="btn-touch btn-entry" onclick="operateInput('${item.id}', 'add')">+ Entrada</button>
+                    <button class="btn-touch btn-exit" onclick="operateInput('${item.id}', 'remove')">- Salida</button>
                 </div>
             `;
             container.appendChild(card);
