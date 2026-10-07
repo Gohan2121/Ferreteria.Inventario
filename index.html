@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control Almacén - Láminas PVC</title>
+    <title>Ferretería La Casa del Constructor - Inventario</title>
     <style>
         :root {
             --bg: #f8fafc;
             --surface: #ffffff;
-            --primary: #2563eb;
+            --primary: #1e3a8a;
+            --primary-bg: #2563eb;
             --primary-soft: #eff6ff;
+            --accent-yellow: #f59e0b;
             --text: #0f172a;
             --text-sub: #64748b;
             --border: #e2e8f0;
@@ -35,45 +37,81 @@
             padding-bottom: 70px;
         }
 
-        .app-bar {
-            background: var(--surface);
-            padding: 14px 16px;
+        /* Encabezado Principal Llamativo con Logo */
+        .brand-header {
+            background: #ffffff;
             border-radius: var(--radius);
-            border: 1px solid var(--border);
+            border: 2px solid #bfdbfe;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            gap: 14px;
         }
 
-        .app-bar h1 {
+        .brand-logo {
+            width: 95px;
+            max-width: 28%;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+        }
+
+        .brand-info {
+            flex: 1;
+        }
+
+        .brand-title {
             font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--text);
+            font-weight: 900;
+            color: #1e3a8a;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-        .badge-live {
-            background: var(--success-soft);
-            color: var(--success);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
+        .brand-sub {
+            display: inline-block;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .brand-address {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .conn-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--success);
+            background: var(--success-soft);
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-top: 6px;
         }
 
-        .badge-live::before {
+        .conn-badge::before {
             content: "";
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             background: var(--success);
             border-radius: 50%;
-            display: inline-block;
         }
 
+        /* Tarjetas de Métricas */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -85,12 +123,12 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 10px;
+            padding: 10px 8px;
             text-align: center;
         }
 
         .stat-card span {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
             font-weight: 700;
             color: var(--text-sub);
@@ -99,17 +137,17 @@
 
         .stat-card strong {
             font-size: 1.25rem;
-            font-weight: 800;
+            font-weight: 900;
             color: var(--primary);
             margin-top: 2px;
             display: block;
         }
 
-        /* Buscador con Sugerencias Rápidas */
+        /* Buscador Dinámico */
         .search-wrap {
             position: sticky;
             top: 10px;
-            z-index: 20;
+            z-index: 25;
             margin-bottom: 12px;
             background: var(--bg);
             padding-bottom: 4px;
@@ -124,11 +162,12 @@
             padding: 14px 40px 14px 16px;
             font-size: 1rem;
             border-radius: var(--radius);
-            border: 1px solid var(--border);
+            border: 2px solid #bfdbfe;
             background: var(--surface);
             box-shadow: 0 4px 12px rgba(0,0,0,0.04);
             outline: none;
             transition: all 0.2s;
+            font-weight: 600;
         }
 
         .search-input:focus {
@@ -149,6 +188,7 @@
             display: none;
         }
 
+        /* Desplegable con Todos los Productos */
         .suggestions-dropdown {
             position: absolute;
             top: calc(100% + 4px);
@@ -157,21 +197,33 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-height: 220px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            max-height: 280px;
             overflow-y: auto;
             display: none;
-            z-index: 30;
+            z-index: 35;
+        }
+
+        .dropdown-header {
+            padding: 8px 14px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--text-sub);
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
         }
 
         .suggestion-item {
-            padding: 12px 16px;
+            padding: 12px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
         }
 
         .suggestion-item:last-child {
@@ -183,41 +235,16 @@
         }
 
         .sugg-stock {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.85rem;
             color: var(--primary);
         }
 
-        .quick-chips {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 6px 2px 2px 2px;
-            -webkit-overflow-scrolling: touch;
+        .sugg-stock.zero {
+            color: var(--danger);
         }
 
-        .quick-chips::-webkit-scrollbar {
-            display: none;
-        }
-
-        .chip {
-            white-space: nowrap;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--text-sub);
-            cursor: pointer;
-        }
-
-        .chip.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
+        /* Tarjeta de Producto */
         .item-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -225,6 +252,7 @@
             padding: 14px;
             margin-bottom: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            transition: all 0.2s;
         }
 
         .item-top {
@@ -254,7 +282,7 @@
         }
 
         .item-qty-num {
-            font-size: 1.4rem;
+            font-size: 1.45rem;
             font-weight: 900;
             color: var(--primary);
             line-height: 1;
@@ -330,9 +358,10 @@
             font-size: 1.1rem;
         }
 
+        /* Agregar producto plegable */
         details.add-panel {
             background: var(--surface);
-            border: 1px dashed var(--border);
+            border: 1px dashed #93c5fd;
             border-radius: var(--radius);
             margin-bottom: 12px;
             overflow: hidden;
@@ -381,7 +410,7 @@
             font-size: 0.95rem;
         }
 
-        /* Cuadros de Historial (Ingresos y Salidas) */
+        /* Cuadros de Historial */
         .history-box {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -399,7 +428,7 @@
         }
 
         .history-header h2 {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 800;
             color: var(--text);
             display: flex;
@@ -469,14 +498,21 @@
 </head>
 <body>
 
-    <header class="app-bar">
-        <div>
-            <h1>Láminas PVC</h1>
-            <small style="color: var(--text-sub); font-size: 0.75rem;">Bodega en Tiempo Real</small>
+    <!-- Encabezado Llamativo con Logo -->
+    <header class="brand-header">
+        <!-- Reemplaza con la etiqueta de imagen generada o usa el archivo descargable que ya la incluye -->
+        <img class="brand-logo" src="data:image/png;base64,..." alt="Ferretería La Casa del Constructor">
+        <div class="brand-info">
+            <h1 class="brand-title">La Casa del Constructor</h1>
+            <div class="brand-sub">Control de Bodega • Láminas PVC</div>
+            <div class="brand-address">📍 Av. Veintimilla, Portugal y México</div>
+            <div>
+                <span id="connStatus" class="conn-badge">En Vivo con Firebase</span>
+            </div>
         </div>
-        <span id="connStatus" class="badge-live">En Vivo</span>
     </header>
 
+    <!-- Resumen de Métricas -->
     <section class="stats-grid">
         <div class="stat-card">
             <span>Modelos</span>
@@ -492,19 +528,12 @@
         </div>
     </section>
 
-    <!-- Buscador con Opciones Rápidas -->
+    <!-- Buscador con Desplegable de Todos los Productos -->
     <div class="search-wrap">
         <div class="search-box-inner">
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Toca aquí o escribe un código..." oninput="handleSearchInput()" onfocus="handleSearchFocus()">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Toca para ver todos los productos..." oninput="handleSearchInput()" onfocus="handleSearchFocus()">
             <button id="clearSearchBtn" class="clear-btn" onclick="clearSearch()">✕</button>
             <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
-        </div>
-        <div class="quick-chips">
-            <button class="chip active" onclick="setQuickFilter('all', this)">Todos</button>
-            <button class="chip" onclick="setQuickFilter('out', this)">⚠️ Agotados (0)</button>
-            <button class="chip" onclick="setQuickFilter('PH', this)">Prefijo PH</button>
-            <button class="chip" onclick="setQuickFilter('ETERNIT', this)">Eternit</button>
-            <button class="chip" onclick="setQuickFilter('A', this)">Prefijo A</button>
         </div>
     </div>
 
@@ -518,7 +547,7 @@
         </div>
     </details>
 
-    <!-- Contenedor de Láminas -->
+    <!-- Lista de Láminas -->
     <main id="listContainer">
         <div class="empty-view">Cargando base de datos...</div>
     </main>
@@ -591,12 +620,11 @@
     const db = firebase.firestore();
 
     let inventoryDocs = [];
-    let currentFilterType = 'all';
 
-    // Escuchar láminas en vivo
+    // Escucha en tiempo real de productos
     db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
         const badge = document.getElementById('connStatus');
-        badge.innerText = "En Vivo";
+        badge.innerText = "En Vivo con Firebase";
         badge.style.background = "var(--success-soft)";
         badge.style.color = "var(--success)";
 
@@ -627,14 +655,13 @@
         badge.style.color = "var(--danger)";
     });
 
-    // Escuchar historial general (ingresos y salidas)
+    // Escucha de historial
     db.collection(HISTORY_COLLECTION)
       .limit(60)
       .onSnapshot((snapshot) => {
           renderHistories(snapshot);
       });
 
-    // Modificar stock y guardar tanto ingresos como salidas con fecha
     async function updateFirebaseStock(docId, delta) {
         const item = inventoryDocs.find(d => d.id === docId);
         if (!item) return;
@@ -738,7 +765,6 @@
             card.className = "item-card";
             card.id = `card-${item.id}`;
             card.setAttribute("data-code", item.codigo);
-            card.setAttribute("data-stock", item.stock);
 
             card.innerHTML = `
                 <div class="item-top">
@@ -783,7 +809,6 @@
             else if (data.tipo === "salida") exits.push(data);
         });
 
-        // Ordenar por fecha descendente
         const sortByDate = (a, b) => {
             const timeA = a.fecha && a.fecha.toMillis ? a.fecha.toMillis() : 0;
             const timeB = b.fecha && b.fecha.toMillis ? b.fecha.toMillis() : 0;
@@ -793,7 +818,6 @@
         entries.sort(sortByDate);
         exits.sort(sortByDate);
 
-        // Renderizar Ingresos
         if (entries.length === 0) {
             entryBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-sub); padding: 18px;">Sin ingresos registrados todavía.</td></tr>';
         } else {
@@ -815,7 +839,6 @@
             }).join('');
         }
 
-        // Renderizar Salidas
         if (exits.length === 0) {
             exitBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-sub); padding: 18px;">Sin salidas registradas todavía.</td></tr>';
         } else {
@@ -838,23 +861,23 @@
         }
     }
 
-    // Buscador y sugerencias
+    // Buscador completo y dinámico
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearchBtn');
     const dropdown = document.getElementById('suggestionsDropdown');
 
     function handleSearchFocus() {
-        showSuggestions(searchInput.value.trim());
+        showAllProductsInDropdown(searchInput.value.trim());
     }
 
     function handleSearchInput() {
         const query = searchInput.value;
         clearBtn.style.display = query.length > 0 ? 'block' : 'none';
-        showSuggestions(query.trim());
+        showAllProductsInDropdown(query.trim());
         applyFilters();
     }
 
-    function showSuggestions(query) {
+    function showAllProductsInDropdown(query) {
         const q = query.toLowerCase();
         let matches = inventoryDocs;
 
@@ -863,26 +886,27 @@
         }
 
         if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; font-size:0.85rem; color:var(--text-sub); text-align:center;">No hay coincidencias</div>';
+            dropdown.innerHTML = '<div style="padding:14px; font-size:0.85rem; color:var(--text-sub); text-align:center;">No se encontró el producto</div>';
             dropdown.style.display = 'block';
             return;
         }
 
-        const preview = matches.slice(0, 8);
-        dropdown.innerHTML = preview.map(item => `
-            <div class="suggestion-item" onclick="selectSuggestion('${item.codigo}', '${item.id}')">
+        let html = `<div class="dropdown-header">Lista completa (${matches.length} productos en bodega)</div>`;
+        html += matches.map(item => `
+            <div class="suggestion-item" onclick="selectProduct('${item.codigo}', '${item.id}')">
                 <div>
                     <strong>${item.codigo}</strong>
                     ${item.obs ? `<small style="color:var(--text-sub); margin-left:6px;">(${item.obs})</small>` : ''}
                 </div>
-                <span class="sugg-stock ${item.stock === 0 ? 'color:var(--danger)' : ''}">${item.stock} un.</span>
+                <span class="sugg-stock ${item.stock === 0 ? 'zero' : ''}">${item.stock} un.</span>
             </div>
         `).join('');
 
+        dropdown.innerHTML = html;
         dropdown.style.display = 'block';
     }
 
-    function selectSuggestion(codigo, docId) {
+    function selectProduct(codigo, docId) {
         searchInput.value = codigo;
         clearBtn.style.display = 'block';
         dropdown.style.display = 'none';
@@ -891,8 +915,12 @@
         const target = document.getElementById(`card-${docId}`);
         if (target) {
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            target.style.outline = '2px solid var(--primary)';
-            setTimeout(() => target.style.outline = 'none', 1500);
+            target.style.outline = '3px solid #2563eb';
+            target.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                target.style.outline = 'none';
+                target.style.transform = 'scale(1)';
+            }, 1400);
         }
     }
 
@@ -903,35 +931,13 @@
         applyFilters();
     }
 
-    function setQuickFilter(type, btn) {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilterType = type;
-        applyFilters();
-    }
-
     function applyFilters() {
         const query = searchInput.value.toLowerCase().trim();
         const cards = document.querySelectorAll('.item-card');
 
         cards.forEach(card => {
             const code = card.getAttribute('data-code').toLowerCase();
-            const stock = parseInt(card.getAttribute('data-stock'));
-
-            let matchesText = code.includes(query);
-            let matchesChip = true;
-
-            if (currentFilterType === 'out') {
-                matchesChip = stock === 0;
-            } else if (currentFilterType === 'PH') {
-                matchesChip = code.startsWith('ph');
-            } else if (currentFilterType === 'ETERNIT') {
-                matchesChip = code.startsWith('eternit');
-            } else if (currentFilterType === 'A') {
-                matchesChip = code.startsWith('a');
-            }
-
-            card.style.display = (matchesText && matchesChip) ? 'block' : 'none';
+            card.style.display = code.includes(query) ? 'block' : 'none';
         });
     }
 
